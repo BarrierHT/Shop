@@ -1,0 +1,17 @@
+{
+  "name": "practice2-nodejs",
+  "version": "1.0.0",
+  "description": "This is a practice",
+  "main": "main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "startServer": "node app2.js",
+    "startNodemonServer": "../nodemon app2.js"
+  },
+  "keywords": [
+    "practice2",
+    "nodejs"
+  ],
+  "author": "Barrier",
+  "license": "ISC"
+}

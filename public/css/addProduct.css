@@ -1,0 +1,41 @@
+main{
+    padding: 1.3rem;
+    font-family: Verdana, Geneva, Tahoma, sans-serif;
+    font-weight: bold;
+}
+.form-control{
+    margin: 1.5rem 0;
+}
+.form-control label,
+.form-control input{
+    display: block;
+}
+.form-control input{
+    font: inherit;
+    padding: 0.9rem;
+    border: solid #10C7DD 2px;
+    border-radius: 2px;
+    width: 100%;
+}
+button{
+    padding: .7rem;
+    font: inherit;
+    font-weight: 900;
+    background-color: #fff;
+    border: solid 1px lightgray;
+    color: rgba(94, 248, 197, 0.966);
+    font-family: sans-serif;
+    border: solid orange 3px;
+    border-radius: 4px;
+}
+button:hover,
+button:active{
+    background-color: rgba(133, 46, 133, 0.897);
+    color: #fff;
+    cursor: pointer;
+}
+.product-form{
+    width: 20rem;
+    max-width: 90%;
+    margin: auto;
+}
