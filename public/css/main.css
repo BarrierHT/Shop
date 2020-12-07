@@ -39,3 +39,63 @@
 .main-header__item a.active{
     color: aquamarine;
 }
+
+.grid {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-around;
+    align-items: stretch;
+  }
+  
+.card {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.26);
+  }
+  
+.card__header,
+.card__content {
+    padding: 1rem;
+  }
+  
+.card__header h1,
+.card__content h1,
+.card__content h2,
+.card__content p {
+    margin: 0;
+  }
+  
+.card__image {
+    width: 100%;
+  }
+  
+.card__image img {
+    width: 100%;
+  }
+  
+.card__actions {
+      padding: 1rem;
+      text-align: center;
+  }
+  
+.card__actions button,
+.card__actions a {
+      margin: 0 0.25rem;
+  }
+
+button{
+    padding: .7rem;
+    font: inherit;
+    font-weight: 900;
+    background-color: #fff;
+    border: solid 1px lightgray;
+    color: rgba(94, 248, 197, 0.966);
+    font-family: sans-serif;
+    border: solid orange 3px;
+    border-radius: 4px;
+}
+button:hover,
+button:active{
+    background-color: rgba(133, 46, 133, 0.897);
+    color: #fff;
+    cursor: pointer;
+}
+  

@@ -1,0 +1,28 @@
+.main-product-form{
+    padding: 1.3rem;
+    font-family: Verdana, Geneva, Tahoma, sans-serif;
+    font-weight: bold;
+}
+.form-control{
+    margin: 1.6rem 0;
+}
+#title{
+    margin-bottom: 1.6rem;
+}
+.form-control label,
+.form-control input{
+    display: block;
+}
+.form-control input{
+    font: inherit;
+    padding: 0.9rem;
+    border: solid #10C7DD 2px;
+    border-radius: 2px;
+    width: 100%;
+}
+.product-form{
+    width: 20rem;
+    max-width: 90%;
+    margin: auto;
+}
+
