@@ -1,0 +1,45 @@
+<%- include('../includes/head.ejs') %>
+
+    <link rel="stylesheet" href="/css/products.css">
+
+</head>
+
+<body>
+<%- include('../includes/navigation.ejs') %>
+    
+    <main>
+    
+		<% if(prods.length > 0) { %>
+		
+		<h1 class="grid">My Products</h1>
+		<h3 class="grid">List of my products...</h3>
+		<br>
+
+        <div class="grid">
+			
+			<% prods.forEach( (product,index) => { %>
+				<article class="card product-item">
+						<header class="card__header">
+							<h1 class="product__title">Product: <%= product.title %> with index: <%=index%></h1>
+						</header>
+						<div class="card__image">
+							<img src="<%= product.imageUrl%>" alt="<%=product.title%>">
+						</div>
+						<div class="card__content">
+							<h2 class="product__price"> $ <%= product.price%></h2>
+							<p class="product__description"><%= product.description%></p>
+						</div>
+						<div class="card__actions">
+							<a href="/products/<%=product.id%>" class="btn"> Details </a>
+							<%- include('../includes/add-to-cart.ejs',{product:product}) %>
+						</div>
+					</article>
+				<% }); %>
+			</div>
+		<% } else  { %>
+			<h1>There are No products!</h1>
+		<% } %>
+
+    </main>
+
+<%- include('../includes/end.ejs') %>

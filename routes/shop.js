@@ -2,31 +2,26 @@ const path = require('path');
 
 const express = require('express');
 
-const rootDir = require('../util/path');
-const adminData = require('./admin');
+const shopController = require('../controllers/shop');
+
+const router = express.Router();
 
 
-router = express.Router();
+router.get('/', shopController.getIndex);
 
-router.get('/',(req,res,next) => {                                           
-    console.log(req.originalUrl);
+router.get('/products', shopController.getProducts);
 
-    const products = adminData.products;
-    console.log('products: ',adminData.products);
+router.get('/products/:productId', shopController.getProduct);                         //Dynamic Route
 
-    // console.log( __filename.split(/[\\/]/).pop() );
-    // console.log( path.join(__dirname,'../','views','shop.html') );
-    
-    res.render('shop.ejs',{
-        prods: products, docTitle: 'My MainShop',
-        path: req._parsedOriginalUrl.pathname
-    }); 
-});
+router.get('/cart', shopController.getCart);
 
+router.post('/add-to-cart', shopController.postCart);
+
+router.post('/delete-cart-item', shopController.postDeleteCart);
+
+router.get('/orders', shopController.getOrders);
+
+router.get('/checkout', shopController.getCheckout);
 
 
-
-
-module.exports = {
-    router: router
-};
+exports.router = router;

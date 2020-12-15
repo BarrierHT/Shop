@@ -2,27 +2,38 @@
     padding: 1.3rem;
     font-family: Verdana, Geneva, Tahoma, sans-serif;
     font-weight: bold;
+    width: 100%;
 }
 .form-control{
     margin: 1.6rem 0;
 }
-#title{
-    margin-bottom: 1.6rem;
+label{
+    margin: 1.6rem 0;
 }
 .form-control label,
-.form-control input{
+.form-control input,
+.form-control textarea{
     display: block;
 }
-.form-control input{
+.form-control input,
+.form-control textarea{
     font: inherit;
     padding: 0.9rem;
     border: solid #10C7DD 2px;
     border-radius: 2px;
     width: 100%;
 }
+.form-control input:focus,
+.form-control textarea:focus{
+    outline-color: purple;
+}
 .product-form{
     width: 20rem;
     max-width: 90%;
     margin: auto;
+}
+textarea{
+    max-width:100%; 
+    max-height:10.6rem;
 }
 

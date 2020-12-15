@@ -2,31 +2,21 @@ const path = require('path');
 
 const express = require('express');
 
-const rootDir = require('../util/path');
+const adminController = require('../controllers/admin');
 
-router = express.Router();
+const router = express.Router();
 
+router.get('/products', adminController.getProducts);
 
-const products = [];
+router.get('/add-product', adminController.getAddProduct);
 
-router.post('/addProduct',(req,res,next) => {                                           
-    console.log(req.originalUrl);
-    // console.log(req.app.locals);
-    console.log({...req.body});
+router.post('/add-product', adminController.postAddproduct);
 
-    products.push({title:req.body['title']});
-    res.redirect(301,'/');
-});
+router.post('/delete-product', adminController.postDeleteProducts);
 
-router.get('/addProduct',(req,res,next) => {                                           
-    console.log(req.originalUrl);
-    // console.log(req);
-    res.render('addProduct.ejs',{
-        docTitle:'Add Products', 
-        path: req._parsedOriginalUrl.pathname
-    });                      //Sending a response (last Middleware) with auto Content-Type
-});
+router.post('/edit-product', adminController.postEditProducts);
 
+router.get('/edit-product/:productId', adminController.getEditProduct);
 
 router.get('/',(req,res,next) => {                                        
     console.log(req.baseUrl);
@@ -34,7 +24,4 @@ router.get('/',(req,res,next) => {
 }); 
 
 
-module.exports = {
-    router: router,
-    products: products
-};
+exports.router = router;
