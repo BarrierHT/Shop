@@ -19,9 +19,11 @@ exports.postAddproduct = (req,res,next) => {
     const imageUrl = req.body.imageUrl;
 
     const product = new Product(null,title,price, description, imageUrl);               //Creating a new object
-    product.save(()=>{
-        res.redirect(301,'/products');                                                  //* Views ----> Model
-    });     
+    product.save()
+    .then( ([rows,fieldData]) => {
+        res.redirect(301,'/products');
+    })
+    .catch (error => console.log(err));     
 }
 
 exports.getEditProduct = (req,res) => {
