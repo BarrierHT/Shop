@@ -5,6 +5,23 @@
 </body>
 
 <%- include('../includes/navigation.ejs') %>
-
+    <main>
+        <% if(orders.length >  0){ %>
+            <ul>
+                <% orders.forEach(order => { %>
+                        <li>
+                            <h1>Id: #<%=order.id%></h1>
+                            <ul>
+                                <% order.products.forEach(item => {%>
+                                    <li> <b> Title: <%=item.title%>, Quantity: <%=item.orderItem.quantity%> </b> </li> 
+                                <% }); %>
+                            </ul>
+                        </li>   
+                <% }); %>
+            </ul>
+        <% } else {%>
+            <h1>There are no Orders!</h1>
+        <% } %>
+    </main>
 
 <%- include('../includes/end.ejs') %>

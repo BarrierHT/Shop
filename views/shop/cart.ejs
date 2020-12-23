@@ -27,13 +27,13 @@
                     <div class="card__content">
                         <h2 class="product__price"> $ <%= product.price%></h2>
                         <p class="product__description"><%= product.description%></p>
-                        <h2 class="product__qty"> Quantity: <%=product.qty%></h2>
+                        <h2 class="product__qty"> Quantity: <%=product.cartItem.quantity%></h2>
                     </div>
                     <div class="card__actions">
                         <a href="/products/<%=product.id%>" class="btn"> Details </a>
                         <form action="/delete-cart-item" method="POST">
                             <input type="hidden" value="<%=product.id%>" name="cartProductId">
-                            <button type="submit" class="btn">Delete 1 Cart Item</button>
+                            <button type="submit" class="btn danger">Delete 1 Cart Item</button>
                         </form>
                     </div>
                 </article>
@@ -43,9 +43,14 @@
         <div>
             <h1 class="centered">Total Price: <%=totalPrice%></h1>
         </div>
+        <div class="centered">
+            <form action="/create-order" method="POST">
+                <button type="submit" class="btn">Send Order!</button>
+            </form>
+        </div>
         <br>
     <% } else  { %>
-        <h1>There are No products!</h1>
+        <h1>There are No products in cart!</h1>
     <% } %>
 
 </main>

@@ -9,81 +9,89 @@ exports.getAddProduct = (req,res,next) => {
     });              
 }
 
-
-
 exports.postAddproduct = (req,res,next) => {
-                                                                                    //? logic before save a new data
-    const title = req.body.title;
-    const price = req.body.price;
-    const description = req.body.description;
-    const imageUrl = req.body.imageUrl;
+    const {title,price,description,imageUrl} = req.body;                        //? logic before save a new data
 
-    const product = new Product(null,title,price, description, imageUrl);               //Creating a new object
-    product.save()
-    .then( ([rows,fieldData]) => {
-        res.redirect(301,'/products');
-    })
-    .catch (error => console.log(err));     
-}
+    req.user
+        .createProduct({                                                        //* Views -> Model
+            title: title,
+            price: price,
+            imageUrl: imageUrl,
+            description: description
+        })
+	    .then( result => res.redirect(301,'/admin/products') )
+	    .catch(err => {
+            console.log(err)
+            res.redirect(301,'/');
+        });
+
+};
 
 exports.getEditProduct = (req,res) => {
     const editMode = req.query.edit === 'true'? true : false;
     if(!editMode) res.redirect(301,'/');
     else{
         const prodId = req.params.productId;
-        Product.findById( prodId, product => {
-            if(!product) return res.redirect(301,'/');
-            res.render('./admin/edit-product.ejs',{
-                docTitle:'Edit Products', 
-                path: '/admin/edit-product',                                      //? Main Path
-                editing: editMode,
-                product:product
-            });  
-        });
+        req.user
+            .getProducts( {where: {id:prodId} } )
+            .then(products => {
+                let product = products[0];
+                if(!product) return res.redirect(301,'/');
+                res.render('./admin/edit-product.ejs',{
+                    docTitle:'Edit Products', 
+                    path: '/admin/edit-product',                                      //? Main Path
+                    editing: editMode,
+                    product:product
+                })
+            })
+            .catch(err => console.log(err));
     }
 }
 
 exports.postEditProducts = (req,res) => {
-    const prodId = req.body.productId;
-    const updatedTitle = req.body.title;
-    const updatedPrice = req.body.price;
-    const updatedDescription = req.body.description;
-    const updatedImageUrl = req.body.imageUrl;
 
-    const updatedProduct = new Product(prodId,updatedTitle,updatedPrice,updatedDescription,updatedImageUrl);
+    const {productId,title,price,description,imageUrl} = req.body;                        
 
-    updatedProduct.save(()=>{
+    Product.findByPk(productId)
+    .then(product => {
 
-        Product.fetchAll(products => {
-            Cart.getCart(cart => {
-                let totalPrice = 0;
-                for(product of products){
-                    const cartProductData = cart.products.find( prodCart => prodCart.id == product.id);
-                    if(cartProductData) {
-                        const productPriceTotal = (cartProductData.qty*product.price);
-                        totalPrice+=productPriceTotal;
-                    }
-                }
-                Cart.updateTotalPrice(totalPrice, () => res.redirect(301,'/admin/products') );
-            });
-        });
+        product.title = title;
+        product.price = price;
+        product.description = description;
+        product.imageUrl = imageUrl;
+        
+        return product.save();
+    })
+    .then(result => res.redirect(301,'/admin/products'))
+    .catch( err => {
+        console.log(err);
+        res.redirect(301,'/');
     });
+   
 }
 
 exports.postDeleteProducts = (req,res) => {
     console.log('prodId: ',req.body.productId);
-    Product.deleteById(req.body.productId, () => {
-        res.redirect(301,'/admin/products');    
+    Product.findByPk(req.body.productId)
+    .then(product => product.destroy())
+    .then(result => res.redirect(301,'/admin/products'))
+    .catch( err => {
+        console.log(err);
+        res.redirect(301,'/');
     });
 }
 
-exports.getProducts = (req,res) => {
-    Product.fetchAll(products => {                                                  //* Model ---> Views
-        res.render('./admin/products.ejs',{
-        prods: products || [], docTitle: 'All products',
-            path: req._parsedOriginalUrl.pathname
-        }); 
-    });
+exports.getProducts = (req,res) => {                                       
+    req.user
+        .getProducts()                              //* Model ---> Views
+        .then(products => {
+            // console.log('products: ',products);
+            res.render('./admin/products.ejs',{
+            prods: products || [], docTitle: 'All products',
+                path: req._parsedOriginalUrl.pathname
+            }); 
+        })
+        .catch(err => console.log(err));								  
 }
 
 
