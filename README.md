@@ -1,2 +1,2 @@
 # Shop
-This is a Online Shop
+This is an Online Shop
