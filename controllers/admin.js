@@ -1,5 +1,4 @@
 const Product = require('../models/product');
-const Cart = require('../models/cart');
 
 exports.getAddProduct = (req,res,next) => {
     res.render('./admin/edit-product.ejs',{
@@ -10,32 +9,39 @@ exports.getAddProduct = (req,res,next) => {
 }
 
 exports.postAddproduct = (req,res,next) => {
-    const {title,price,description,imageUrl} = req.body;                        //? logic before save a new data
-
-    req.user
-        .createProduct({                                                        //* Views -> Model
-            title: title,
-            price: price,
-            imageUrl: imageUrl,
-            description: description
-        })
+    const {title,price,description,imageUrl} = req.body;                        
+    const product = new Product(null,title,price,imageUrl,description);
+    
+    product
+        .save()
 	    .then( result => res.redirect(301,'/admin/products') )
 	    .catch(err => {
             console.log(err)
-            res.redirect(301,'/');
+            res.redirect(301,'/');  
         });
 
 };
+
+exports.getProducts = (req,res) => {                                       
+    Product.fetchAll()
+    .then(products => {
+        // console.log('products: ',products);
+        res.render('./admin/products.ejs',{
+        prods: products || [], docTitle: 'All products',
+            path: req._parsedOriginalUrl.pathname
+        }); 
+    })
+    .catch(err => console.log(err));								  
+}
 
 exports.getEditProduct = (req,res) => {
     const editMode = req.query.edit === 'true'? true : false;
     if(!editMode) res.redirect(301,'/');
     else{
         const prodId = req.params.productId;
-        req.user
-            .getProducts( {where: {id:prodId} } )
-            .then(products => {
-                let product = products[0];
+            Product.findById(prodId)
+            .then(product => {
+                // console.log('product: ',product);
                 if(!product) return res.redirect(301,'/');
                 res.render('./admin/edit-product.ejs',{
                     docTitle:'Edit Products', 
@@ -52,28 +58,19 @@ exports.postEditProducts = (req,res) => {
 
     const {productId,title,price,description,imageUrl} = req.body;                        
 
-    Product.findByPk(productId)
-    .then(product => {
+    const product = new Product(productId,title,price,imageUrl,description); 
 
-        product.title = title;
-        product.price = price;
-        product.description = description;
-        product.imageUrl = imageUrl;
-        
-        return product.save();
-    })
+    product.save()
     .then(result => res.redirect(301,'/admin/products'))
     .catch( err => {
         console.log(err);
         res.redirect(301,'/');
     });
-   
 }
 
 exports.postDeleteProducts = (req,res) => {
-    console.log('prodId: ',req.body.productId);
-    Product.findByPk(req.body.productId)
-    .then(product => product.destroy())
+    const prodId = req.body.productId;
+    Product.deleteById(prodId)
     .then(result => res.redirect(301,'/admin/products'))
     .catch( err => {
         console.log(err);
@@ -81,17 +78,4 @@ exports.postDeleteProducts = (req,res) => {
     });
 }
 
-exports.getProducts = (req,res) => {                                       
-    req.user
-        .getProducts()                              //* Model ---> Views
-        .then(products => {
-            // console.log('products: ',products);
-            res.render('./admin/products.ejs',{
-            prods: products || [], docTitle: 'All products',
-                path: req._parsedOriginalUrl.pathname
-            }); 
-        })
-        .catch(err => console.log(err));								  
-}
-
-
+    

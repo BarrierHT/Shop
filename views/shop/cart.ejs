@@ -21,12 +21,8 @@
                     <header class="card__header">
                         <h1 class="product__title">Product: <%= product.title %> with index: <%=index%></h1>
                     </header>
-                    <div class="card__image">
-                        <img src="<%= product.imageUrl%>" alt="<%=product.title%>">
-                    </div>
                     <div class="card__content">
                         <h2 class="product__price"> $ <%= product.price%></h2>
-                        <p class="product__description"><%= product.description%></p>
                         <h2 class="product__qty"> Quantity: <%=product.cartItem.quantity%></h2>
                     </div>
                     <div class="card__actions">
