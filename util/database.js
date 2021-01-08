@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 const mongodb = require('mongodb');
 const env = require('dotenv').config();
 const MongoClient = mongodb.MongoClient;
@@ -31,13 +30,13 @@ const getDb = () =>{
 
 exports.checkConnection = mongoConnect;
 exports.getDb = getDb;
-=======
+
 const Sequelize = require('sequelize').Sequelize;
 
 const sequelize = new Sequelize('node-complete','root','administrator',{
     dialect: 'mysql',
     host: 'localhost'
 })
->>>>>>> 2938fcc... SQL(Sequelize) Module finished
+
 
 module.exports = sequelize;
