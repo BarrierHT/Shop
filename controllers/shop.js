@@ -1,9 +1,14 @@
 const Product = require('../models/product');
 
-exports.getIndex = (req,res) => {    
-    Product.fetchTest()		        						//* Model ---> Views		
+const Sequelize = require('sequelize');
+const sequelize = require('../util/database');
+
+const Op = Sequelize.Op;
+
+exports.getIndex = (req,res) => {
+    Product.findAll()										//* Model ---> Views		
 	.then(products => {
-        // console.log('products: ',products);
+
         res.render('./shop/index.ejs',{
             prods: products || [], docTitle: 'Main Shop',
             path: req._parsedOriginalUrl.pathname
@@ -13,9 +18,10 @@ exports.getIndex = (req,res) => {
 }
 
 exports.getProducts = (req,res,next) => {      
-    Product.fetchAll()										//* Model ---> Views		
+
+    Product.findAll()										//* Model ---> Views		
 	.then(products => {
-        // console.log(products);
+
         res.render('./shop/product-list.ejs',{
             prods: products || [], docTitle: 'All products',
             path: req._parsedOriginalUrl.pathname
@@ -26,8 +32,16 @@ exports.getProducts = (req,res,next) => {
 
 exports.getProduct = (req,res,next) => {
     const productId = req.params.productId;
-    Product.findById(productId)
-    .then( product  => {
+
+    Product.findAll({
+        attributes:['id','title','description','price','imageUrl'],       
+        where: {
+            id: productId
+        }, 
+    })
+    .then( products  => {
+        let product = products[0];
+
         // console.log('product: ',product);
         try{
             product.imageUrl = product.imageUrl;                            //?Problem with img Url request (too long)

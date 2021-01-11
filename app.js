@@ -8,6 +8,7 @@ const adminRoutes = require('./routes/admin');
 const shopRoutes = require('./routes/shop');
 const rootDir = require('./util/path');
 
+
 const mongoConnect = require('./util/database');    
 
 const User = require('./models/user');
@@ -31,6 +32,14 @@ app.use( (req,res,next) =>{
             next();
         })
         .catch(err => console.log(err));
+
+
+    // User.findByPk(1)
+    //     .then(user => {
+    //         req.user = user;                                                        //ToDo Create a req.user in the middleware
+    //         next();
+    //     })
+    //     .catch(err => console.log(err));
 });
 
 app.use('/', infoData.firstMiddleware);
@@ -44,6 +53,7 @@ app.use(infoData.get404);
 
 app.set('port', process.env.PORT || 3000);
 
+
 mongoConnect.checkConnection(  () => {
     // let findUser = User.findById('5febba3256fdbf4d26288c0e'); 
     // if(findUser){
@@ -56,3 +66,6 @@ mongoConnect.checkConnection(  () => {
     // }
     // else console.log('User not found, erorr');
 });
+
+mongoConnect.checkConnection(  () => app.listen(app.get('port')) );
+

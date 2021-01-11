@@ -1,6 +1,5 @@
-const { ObjectId } = require('mongodb');
-const getDb = require('../util/database').getDb;
 
+const Sequelize = require('sequelize');
 
 class Product {
 	constructor(id,title,price,imageUrl,description, userId){
@@ -29,12 +28,6 @@ class Product {
 				.catch(err => console.log(err));
 	}
 
-	static findById(prodId){
-		const db = getDb();
-		return db.collection('products').findOne({ _id: ObjectId(prodId) })
-				.then(product => product)
-				.catch(err => console.log(err));
-	}
 	
 	static deleteById(prodId){
 		const db = getDb();
