@@ -53,19 +53,5 @@ app.use(infoData.get404);
 
 app.set('port', process.env.PORT || 3000);
 
-
-mongoConnect.checkConnection(  () => {
-    // let findUser = User.findById('5febba3256fdbf4d26288c0e'); 
-    // if(findUser){
-    //     findUser
-    //         .then(user => {
-                // console.log('user2: ',user);
-                app.listen(app.get('port'));
-            // })
-            // .catch(err => console.log(err));
-    // }
-    // else console.log('User not found, erorr');
-});
-
 mongoConnect.checkConnection(  () => app.listen(app.get('port')) );
 
