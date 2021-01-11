@@ -1,12 +1,8 @@
+const { ObjectId } = require('mongodb');
 const Product = require('../models/product');
 
-const Sequelize = require('sequelize');
-const sequelize = require('../util/database');
-
-const Op = Sequelize.Op;
-
 exports.getIndex = (req,res) => {
-    Product.findAll()										//* Model ---> Views		
+    Product.fetchAll()										//* Model ---> Views		
 	.then(products => {
 
         res.render('./shop/index.ejs',{
@@ -19,7 +15,7 @@ exports.getIndex = (req,res) => {
 
 exports.getProducts = (req,res,next) => {      
 
-    Product.findAll()										//* Model ---> Views		
+    Product.fetchAll()										//* Model ---> Views		
 	.then(products => {
 
         res.render('./shop/product-list.ejs',{
@@ -33,12 +29,7 @@ exports.getProducts = (req,res,next) => {
 exports.getProduct = (req,res,next) => {
     const productId = req.params.productId;
 
-    Product.findAll({
-        attributes:['id','title','description','price','imageUrl'],       
-        where: {
-            id: productId
-        }, 
-    })
+    Product.fetchAll( {_id:ObjectId(productId)} )
     .then( products  => {
         let product = products[0];
 
