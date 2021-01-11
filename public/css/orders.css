@@ -1,0 +1,22 @@
+.orders__item{
+    /* border: rgba(13, 173, 13, 0.918) 3px solid; */
+    border: solid 3px #551A8B;
+    margin-bottom: 1rem;
+    padding: 1rem;
+    max-width: 70%;
+    overflow: auto;
+}
+
+.orders__products-item{
+    margin-bottom: .5rem;
+    color: rgb(74, 126, 55);
+    padding: .5rem;
+    border: lightskyblue 2px solid;
+    font-family: 'Comic Sans MS';
+    font-size: .9rem;
+    overflow: auto;
+}
+
+.orders, .orders > li > ul{
+    list-style: none;
+}

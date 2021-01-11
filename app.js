@@ -3,12 +3,14 @@ const path = require('path');
 const express = require('express');
 const bodyParser = require('body-parser');
 
-const rootDir = require('./util/path');
 const infoData = require('./controllers/info');
 const adminRoutes = require('./routes/admin');
 const shopRoutes = require('./routes/shop');
+const rootDir = require('./util/path');
 
 const mongoConnect = require('./util/database');    
+
+const User = require('./models/user');
 
 const app = express();                                                  //Get main express function
 
@@ -22,13 +24,13 @@ app.use( bodyParser.urlencoded( {extended:false} ) );
 app.use( express.static( path.join(rootDir,'public') ) );
 
 app.use( (req,res,next) =>{                                                     
-    // User.findByPk(1)
-    //     .then(user => {
-    //         req.user = user;                                                        //ToDo Create a req.user in the middleware
-    //         next();
-    //     })
-    //     .catch(err => console.log(err));
-    next();
+    User.findById('5febb4cc692c612068fc3f34')
+        .then(user => {
+            // console.log('user: ',user);
+            req.user = new User(user.name,user.email,user.password,user.cart,user._id);      //* Create a req.user in the middleware
+            next();
+        })
+        .catch(err => console.log(err));
 });
 
 app.use('/', infoData.firstMiddleware);
@@ -42,4 +44,15 @@ app.use(infoData.get404);
 
 app.set('port', process.env.PORT || 3000);
 
-mongoConnect.checkConnection(  () => app.listen(app.get('port')) );
+mongoConnect.checkConnection(  () => {
+    // let findUser = User.findById('5febba3256fdbf4d26288c0e'); 
+    // if(findUser){
+    //     findUser
+    //         .then(user => {
+                // console.log('user2: ',user);
+                app.listen(app.get('port'));
+            // })
+            // .catch(err => console.log(err));
+    // }
+    // else console.log('User not found, erorr');
+});

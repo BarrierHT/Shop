@@ -3,12 +3,13 @@ const getDb = require('../util/database').getDb;
 
 
 class Product {
-	constructor(id,title,price,imageUrl,description){
+	constructor(id,title,price,imageUrl,description, userId){
 		this._id = ObjectId(id);											//? this._id = id? ObjectId(id) : null;
 		this.title = title;
 		this.price = Number(price);
 		this.imageUrl = imageUrl;
 		this.description = description;
+		this.userId = ObjectId(userId);
 	}
 
 	save(){
@@ -19,10 +20,11 @@ class Product {
 					.catch(err => console.log(err));
 	}
 	
-	static fetchAll(){
+	static fetchAll(cond = {}){
+		// console.log('condition: ', cond);
 		const db = getDb(); 
 		// db.listCollections().toArray().then(res => console.log(res));
-		return db.collection('products').find().toArray()
+		return db.collection('products').find(cond).toArray()
 				.then(products => products)
 				.catch(err => console.log(err));
 	}
@@ -37,6 +39,11 @@ class Product {
 	static deleteById(prodId){
 		const db = getDb();
 		return db.collection('products').deleteOne({ _id: ObjectId(prodId) })
+				// .then(result => {
+				// 	return db.collection('users').updateOne({_id: this._id},
+				// 		{ $pull: { 'cart.items': { productId: ObjectId(prodId)} } }
+				// 		);
+				// })
 				.then(result => result)
 				.catch(err => console.log(err));
 	}

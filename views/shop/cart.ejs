@@ -23,12 +23,12 @@
                     </header>
                     <div class="card__content">
                         <h2 class="product__price"> $ <%= product.price%></h2>
-                        <h2 class="product__qty"> Quantity: <%=product.cartItem.quantity%></h2>
+                        <h2 class="product__qty"> Quantity: <%=product.quantity%></h2>
                     </div>
                     <div class="card__actions">
-                        <a href="/products/<%=product.id%>" class="btn"> Details </a>
+                        <a href="/products/<%=product._id%>" class="btn"> Details </a>
                         <form action="/delete-cart-item" method="POST">
-                            <input type="hidden" value="<%=product.id%>" name="cartProductId">
+                            <input type="hidden" value="<%=product._id%>" name="cartProductId">
                             <button type="submit" class="btn danger">Delete 1 Cart Item</button>
                         </form>
                     </div>
