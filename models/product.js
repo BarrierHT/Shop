@@ -1,5 +1,5 @@
-
-const Sequelize = require('sequelize');
+const getDb = require('../util/database').getDb;
+const { ObjectId } = require('mongodb');
 
 class Product {
 	constructor(id,title,price,imageUrl,description, userId){
