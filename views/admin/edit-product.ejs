@@ -33,7 +33,7 @@
                 <label for="imageUrl">Image URL</label> 
                 <input type="text" name="imageUrl"  placeholder="Write the description" id="imageUrl" value="<%=editing? product.imageUrl  : '' %>">
             </div>
-            <% if(editing) { %> <input type="hidden" value="<%=product._id%>" name="productId"> <% }%>
+            <% if(editing) { %> <input type="hidden" value="<%=product.id%>" name="productId"> <% }%>
             <button class="btn" type="submit"><%=editing? 'Update Product' : 'Add Product' %></button>
         </form> 
 
