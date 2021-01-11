@@ -1,166 +1,70 @@
 const { ObjectId } = require('mongodb');
-const Product = require('../models/product');
-
-exports.getIndex = (req,res) => {
-    Product.fetchAll()										//* Model ---> Views		
-	.then(products => {
-
-        res.render('./shop/index.ejs',{
-            prods: products || [], docTitle: 'Main Shop',
-            path: req._parsedOriginalUrl.pathname
-        }); 
-	})
-	.catch(err => console.log(err));
-}
-
-exports.getProducts = (req,res,next) => {      
-
-    Product.fetchAll()										//* Model ---> Views		
-	.then(products => {
-
-        res.render('./shop/product-list.ejs',{
-            prods: products || [], docTitle: 'All products',
-            path: req._parsedOriginalUrl.pathname
-        }); 
-	})
-	.catch(err => console.log(err));
-}
-
-exports.getProduct = (req,res,next) => {
-    const productId = req.params.productId;
-
-    Product.fetchAll( {_id:ObjectId(productId)} )
-    .then( products  => {
-        let product = products[0];
-
-        // console.log('product: ',product);
-        try{
-            product.imageUrl = product.imageUrl;                            //?Problem with img Url request (too long)
-        }catch(err){
-            product = {};
-        };
-        res.render('./shop/product-detail.ejs',{
-        docTitle: `Product: ${product.title}`,
-        product: product, 
-        path:'/products'});
-    })
-    .catch(err => console.log(err));
-
-}
-
-exports.postCart = (req,res) => {
-    const prodId = req.body.id;
-    Product.findById(prodId)
-        .then(product => req.user.addToCart(product) )
-        .then(result => {
-            // console.log('result: ',result);
-            res.redirect(301,'/cart');
-        })
-        .catch(err => console.log(err));
-}
-
-exports.getCart = (req,res) => {
-    req.user.getCartProducts()
-        .then(products =>{
-            let totalPrice = 0;
-            // console.log('products: ',products);
-            for (const product of products) totalPrice+= (product.quantity*product.price);
-            
-            res.render('./shop/cart.ejs',{
-                docTitle: `Cart Shop ${req.user._id}`, 
-                path:req._parsedOriginalUrl.pathname,
-                products: products,
-                totalPrice: totalPrice
-            });  
-        })
-        .catch(err => console.log(err));
-}
-
-exports.postDeleteCart = (req,res) => {
-    const prodId = req.body.cartProductId;
-
-    req.user.deleteCartItem(prodId)
-        .then(result => {
-            // console.log(result);
-            res.redirect(301,'/cart');
-        })
-        .catch(err => console.log(err));
-}
-
-exports.postOrder = (req,res) => {
-
-    req.user
-        .addOrder()
-        .then(result => {
-            // console.log(result);
-            res.redirect(301,'/orders');
-        })
-        .catch(err => console.log(err));
+const getDb = require('../util/database').getDb;
 
 
-    // let fetchedCart;
-    // req.user
-    //     .createOrder()
-    //     .then(order => {
-    //         req.user
-    //             .getCart()
-    //             .then(cart => {
-    //                 fetchedCart = cart;
-    //                 return cart.getProducts();
-    //             })
-    //             .then(products => {
-    //                 return products.forEach(product => {
-    //                     order.addProduct(product, {through:{quantity:product.cartItem.quantity}} );
-    //                 });
-    //             })
-    //             .then(result => fetchedCart.setProducts(null))
-    //             .then(result => res.redirect(301,'/orders'))
-    //             .catch(err => console.log(err));
-    //     })
-    //     .catch(err => console.log(err));
-}
+class Product {
+	constructor(id,title,price,imageUrl,description, userId){
+		this._id = ObjectId(id);											//? this._id = id? ObjectId(id) : null;
+		this.title = title;
+		this.price = Number(price);
+		this.imageUrl = imageUrl;
+		this.description = description;
+		this.userId = ObjectId(userId);
+	}
 
-exports.getOrders = (req,res) => {
+	save(){
+		const db = getDb(); 
+			console.log('updating or inserting One');
+			return db.collection('products').updateOne({_id: this._id},{ $set: this },{ upsert:true })
+					.then(result => result)
+					.catch(err => console.log(err));
+	}
+	
+	static fetchAll(cond = {}){
+		// console.log('condition: ', cond);
+		const db = getDb(); 
+		// db.listCollections().toArray().then(res => console.log(res));
+		return db.collection('products').find(cond).toArray()
+				.then(products => products)
+				.catch(err => console.log(err));
+	}
 
-    req.user.getOrders()
-        .then(orders => {
+	static findById(prodId){
+		const db = getDb();
+		return db.collection('products').findOne({ _id: ObjectId(prodId) })
+				.then(product => product)
+				.catch(err => console.log(err));
+	}
+	
+	static deleteById(prodId){
+		const db = getDb();
+		return db.collection('products').deleteOne({ _id: ObjectId(prodId) })
+				// .then(result => {
+				// 	return db.collection('users').updateOne({_id: this._id},
+				// 		{ $pull: { 'cart.items': { productId: ObjectId(prodId)} } }
+				// 		);
+				// })
+				.then(result => result)
+				.catch(err => console.log(err));
+	}
 
-            orders.forEach(order => {
-                let totalPrice = 0;
-                order.items.forEach( product => totalPrice+= (product.quantity*product.price) )
-                order.totalPrice = totalPrice;
-            });
-            
-            console.log('orders: ',orders);
-
-            res.render('./shop/orders.ejs',{
-                docTitle: 'Orders', 
-                path:req._parsedOriginalUrl.pathname,
-                orders: orders   
-            }); 
-        })
-        .catch(err => console.log(err));
-
-    // req.user
-    //     .getOrders({include: [{
-    //         model: Product, 
-    //         required:false,
-    //         where:{}
-    //      }]})
-    //     .then(orders => {
-    //         // console.log(orders[0].products[0].orderItem);
-    //         res.render('./shop/orders.ejs',{
-    //             docTitle: 'Orders', 
-    //             path:req._parsedOriginalUrl.pathname,
-    //             orders: orders              
-    //         }); 
-    //     })
-    //     .catch(err => console.log(err));
+	static fetchTest(){
+		const db = getDb(); 
+		return db.collection('products').aggregate([ 
+				{ $project: { "price":1, "title":1, "_id":0 } },
+				{ $limit: 4 },
+				{ $skip: 1 },
+				{ $sort: {price: 1, title: -1} } ])
+				.toArray()
+				.then(products => products)
+				.catch(err => console.log(err));
+	// return db.collection('products').updateMany({price:{$type: 'double'}},{$set: {
+	// 			price: 5.99	
+	// 		}})
+	// 		.then(products => products)
+	// 		.catch(err => console.log(err));
+	}
 }
 
 
-exports.getCheckout = (req,res) => {
-    res.render('./shop/checkout.ejs',{
-        docTitle: 'Checkout', 
-        path:req._parsedOriginalUrl.pathname});   
-}
+module.exports = Product;
