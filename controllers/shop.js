@@ -1,7 +1,8 @@
 const Product = require('../models/product');
+const Order = require('../models/orders');
 
 exports.getIndex = (req,res) => {    
-    Product.fetchTest()		        						//* Model ---> Views		
+    Product.find()		        						//* Model ---> Views		
 	.then(products => {
         // console.log('products: ',products);
         res.render('./shop/index.ejs',{
@@ -13,7 +14,7 @@ exports.getIndex = (req,res) => {
 }
 
 exports.getProducts = (req,res,next) => {      
-    Product.fetchAll()										//* Model ---> Views		
+    Product.find(/*{title: /a/,price:{$lte:129}} */ )									//* Model ---> Views		
 	.then(products => {
         // console.log(products);
         res.render('./shop/product-list.ejs',{
@@ -45,8 +46,9 @@ exports.getProduct = (req,res,next) => {
 
 exports.postCart = (req,res) => {
     const prodId = req.body.id;
-    Product.findById(prodId)
-        .then(product => req.user.addToCart(product) )
+
+        req.user
+        .addToCart(prodId)
         .then(result => {
             // console.log('result: ',result);
             res.redirect(301,'/cart');
@@ -55,12 +57,24 @@ exports.postCart = (req,res) => {
 }
 
 exports.getCart = (req,res) => {
-    req.user.getCartProducts()
-        .then(products =>{
+    req.user
+        .populate('cart.items.productId', '-imageUrl')
+        .execPopulate()
+        .then(cartUser =>{
+            let products = cartUser.cart.items;            
             let totalPrice = 0;
-            // console.log('products: ',products);
-            for (const product of products) totalPrice+= (product.quantity*product.price);
+
+            products = products.map(product => {
+                totalPrice+= (product.quantity*product.productId.price);
+                return {
+                    quantity: product.quantity,
+                    price: product.productId.price,
+                    title: product.productId.title,
+                    productId: product.productId._id
+                };
+            })
             
+            // console.log('products: ',products);
             res.render('./shop/cart.ejs',{
                 docTitle: `Cart Shop ${req.user._id}`, 
                 path:req._parsedOriginalUrl.pathname,
@@ -74,7 +88,8 @@ exports.getCart = (req,res) => {
 exports.postDeleteCart = (req,res) => {
     const prodId = req.body.cartProductId;
 
-    req.user.deleteCartItem(prodId)
+        req.user
+        .deleteCartItem(prodId)
         .then(result => {
             // console.log(result);
             res.redirect(301,'/cart');
@@ -91,43 +106,21 @@ exports.postOrder = (req,res) => {
             res.redirect(301,'/orders');
         })
         .catch(err => console.log(err));
-
-
-    // let fetchedCart;
-    // req.user
-    //     .createOrder()
-    //     .then(order => {
-    //         req.user
-    //             .getCart()
-    //             .then(cart => {
-    //                 fetchedCart = cart;
-    //                 return cart.getProducts();
-    //             })
-    //             .then(products => {
-    //                 return products.forEach(product => {
-    //                     order.addProduct(product, {through:{quantity:product.cartItem.quantity}} );
-    //                 });
-    //             })
-    //             .then(result => fetchedCart.setProducts(null))
-    //             .then(result => res.redirect(301,'/orders'))
-    //             .catch(err => console.log(err));
-    //     })
-    //     .catch(err => console.log(err));
 }
 
 exports.getOrders = (req,res) => {
 
-    req.user.getOrders()
+    Order.find({'user._id': req.user._id})
         .then(orders => {
 
+            // console.log('orders: ',orders);
+            
             orders.forEach(order => {
                 let totalPrice = 0;
                 order.items.forEach( product => totalPrice+= (product.quantity*product.price) )
                 order.totalPrice = totalPrice;
             });
             
-            console.log('orders: ',orders);
-
             res.render('./shop/orders.ejs',{
                 docTitle: 'Orders', 
                 path:req._parsedOriginalUrl.pathname,
@@ -136,21 +129,6 @@ exports.getOrders = (req,res) => {
         })
         .catch(err => console.log(err));
 
-    // req.user
-    //     .getOrders({include: [{
-    //         model: Product, 
-    //         required:false,
-    //         where:{}
-    //      }]})
-    //     .then(orders => {
-    //         // console.log(orders[0].products[0].orderItem);
-    //         res.render('./shop/orders.ejs',{
-    //             docTitle: 'Orders', 
-    //             path:req._parsedOriginalUrl.pathname,
-    //             orders: orders              
-    //         }); 
-    //     })
-    //     .catch(err => console.log(err));
 }
 
 

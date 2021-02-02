@@ -2,6 +2,7 @@ const path = require('path');
 
 const express = require('express');
 const bodyParser = require('body-parser');
+const mongoose = require('mongoose');
 
 const infoData = require('./controllers/info');
 const adminRoutes = require('./routes/admin');
@@ -9,9 +10,7 @@ const shopRoutes = require('./routes/shop');
 const rootDir = require('./util/path');
 
 
-const mongoConnect = require('./util/database');    
-
-const User = require('./models/user');
+const User = require('./models/user');                                  //Mongoose model
 
 const app = express();                                                  //Get main express function
 
@@ -25,21 +24,12 @@ app.use( bodyParser.urlencoded( {extended:false} ) );
 app.use( express.static( path.join(rootDir,'public') ) );
 
 app.use( (req,res,next) =>{                                                     
-    User.findById('5febb4cc692c612068fc3f34')
+    User.findById('600fb0089f5ee63db05cbdd7')
         .then(user => {
-            // console.log('user: ',user);
-            req.user = new User(user.name,user.email,user.password,user.cart,user._id);      //* Create a req.user in the middleware
+            req.user = user;                                                        //* Create a req.user in the middleware
             next();
         })
         .catch(err => console.log(err));
-
-
-    // User.findByPk(1)
-    //     .then(user => {
-    //         req.user = user;                                                        //ToDo Create a req.user in the middleware
-    //         next();
-    //     })
-    //     .catch(err => console.log(err));
 });
 
 app.use('/', infoData.firstMiddleware);
@@ -53,5 +43,33 @@ app.use(infoData.get404);
 
 app.set('port', process.env.PORT || 3000);
 
-mongoConnect.checkConnection(  () => app.listen(app.get('port')) );
+
+let mongoUser = 'administrator';
+let mongoPassword = 'VaxS1iEjJcawdinl';
+let mongoDatabase = 'Shop';
+// console.log(process.env);
+
+mongoose.connect(`mongodb+srv://${mongoUser}:${mongoPassword}@node-course.msdnf.mongodb.net/${mongoDatabase}?retryWrites=true&w=majority`, {useNewUrlParser: true, useUnifiedTopology: true})
+    .then(result => {
+        // console.log(result);
+        return User.findById('6014fc3d8aed0b3f8cee5c66');
+    }) 
+    .then(user => {
+        // console.log('user: ',user,' ',typeof(user));
+        if(!user){
+            console.log('hi');
+            const user = new User({
+                name: 'Ramon',
+                email: 'test2@gmail.com',
+                password: '111',
+                cart: { items: [] }
+            });
+            return User.insertMany([user]);
+        }
+    })
+    .then( () => app.listen(app.get('port')) )
+    .catch(err => console.log(err));
+
+
+
 

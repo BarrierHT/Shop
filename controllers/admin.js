@@ -1,4 +1,3 @@
-const { ObjectId } = require('mongodb');
 const Product = require('../models/product');
 
 exports.getAddProduct = (req,res,next) => {
@@ -10,9 +9,16 @@ exports.getAddProduct = (req,res,next) => {
 }
 
 exports.postAddproduct = (req,res,next) => {
-    const {title,price,description,imageUrl} = req.body;                        
-    const product = new Product(null,title,price,imageUrl,description,req.user._id);
-    
+    const {title,price,description,imageUrl} = req.body;    
+    const product = new Product({
+        title:title,
+        price:price,
+        description:description,
+        userId: req.user._id
+    });
+
+    imageUrl.length > 0 ? product.imageUrl = imageUrl : product.imageUrl;
+
     product
         .save()
 	    .then( result => res.redirect(301,'/admin/products') )
@@ -24,19 +30,21 @@ exports.postAddproduct = (req,res,next) => {
 };
 
 exports.getProducts = (req,res) => {                                       
-    const cond = {
-        userId: ObjectId(req.user._id)
-    };
+    // const cond = {
+    //     userId: ObjectId(req.user._id)
+    // };
 
-    Product.fetchAll(cond)
-    .then(products => {
-        // console.log('products: ',products);
-        res.render('./admin/products.ejs',{
-        prods: products || [], docTitle: 'All products',
-            path: req._parsedOriginalUrl.pathname
-        }); 
-    })
-    .catch(err => console.log(err));								  
+    Product.find({userId: req.user._id})
+    // .select('name imageUrl price -_id')
+        .populate('userId','name email')               //Joins, retrieve data from another collections
+        .then(products => {
+            // console.log('products: ',products);
+            res.render('./admin/products.ejs',{
+            prods: products || [], docTitle: 'All products',
+                path: req._parsedOriginalUrl.pathname
+            }); 
+        })
+        .catch(err => console.log(err));								  
 }
 
 exports.getEditProduct = (req,res) => {
@@ -61,11 +69,31 @@ exports.getEditProduct = (req,res) => {
 
 exports.postEditProducts = (req,res) => {
 
-    const {productId,title,price,description,imageUrl} = req.body;                        
+    const {productId,title,price,description,imageUrl} = req.body;                         
 
-    const product = new Product(productId,title,price,imageUrl,description,req.user._id); 
+    const obj = {
+        title: title, 
+        price: price, 
+        description: description, 
+        imageUrl: imageUrl,
+        userId: req.user._id
+    }
 
-    product.save()
+    // Product.findByIdAndUpdate(productId,{
+    //     title: title, 
+    //     price: price, 
+    //     description: description, 
+    //     imageUrl: imageUrl
+    // })
+    // Product.findById(productId)
+        //.then(product => {
+        //     product.title = title;
+        //     product.price = price;
+        //     product.description = description;  
+        //     product.imageUrl = imageUrl;
+        //     return product.save();
+        // })
+    Product.updateOne({_id: productId},{ $set: obj },{ upsert:true })
     .then(result => res.redirect(301,'/admin/products'))
     .catch( err => {
         console.log(err);
@@ -75,7 +103,7 @@ exports.postEditProducts = (req,res) => {
 
 exports.postDeleteProducts = (req,res) => {
     const prodId = req.body.productId;
-    Product.deleteById(prodId)
+    Product.deleteOne({_id: prodId})
     .then(result => res.redirect(301,'/admin/products'))
     .catch( err => {
         console.log(err);
