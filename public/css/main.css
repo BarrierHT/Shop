@@ -34,14 +34,16 @@ main ul{
 .main-header__nav{
     align-items: center;
     display: none;                                          /*? Modification */
-}
+    width: 100%;
+    justify-content: space-between;
+} 
 
 .main-header__item-list{
-    /* text-align: center; */
+    /* #text-align: center; */
     text-decoration: none;
     display: flex;
     list-style: none;
-    margin: auto;
+    margin: 0;
 }
 
 .main-header__item{
@@ -51,15 +53,22 @@ main ul{
     font-family: sans-serif,Verdana, Geneva, Tahoma, sans-serif;
 }
 
-.main-header__item a{
+.main-header__item a,
+.main-header__item button{
+    font:inherit;
+    cursor: pointer;
     text-decoration: none;
+    border:none;
+    background-color: transparent;
     color: #551A8B;
     text-shadow: -2px 2px .8em  #000;
 }
 
 .main-header__item a:hover,
 .main-header__item a:active,
-.main-header__item a.active{
+.main-header__item a.active,
+.main-header__item button:active,
+.main-header__item button:hover{
     color: aquamarine;
 }
 
@@ -95,18 +104,22 @@ main ul{
     overflow: auto;
 }
 
-.mobile-nav__item a {
+.mobile-nav__item a, .mobile-nav__item button {
     text-decoration: none;
     color: #551A8B;
+    border:none;
     font-size: 1.4rem;
     font-weight: bold;
     font-family: sans-serif;
     padding: 0.5rem 2rem;
+    cursor: pointer;
 }
 
 .mobile-nav__item a:active,
 .mobile-nav__item a:hover,
-.mobile-nav__item a.active {
+.mobile-nav__item a.active,
+.mobile-nav__item button:active,
+.mobile-nav__item button:hover {
     background-color: aquamarine;
     border-radius: 3px;
 }

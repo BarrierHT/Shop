@@ -12,7 +12,7 @@
 		<% if(prods.length > 0) { %>
 		
 		<h1 class="grid">My Products</h1>
-		<h3 class="grid">List of my products...</h3>
+		<h3 class="grid">List of all products...</h3>
 		<br>
 
         <div class="grid">
@@ -31,7 +31,10 @@
 						</div>
 						<div class="card__actions">
 							<a href="/products/<%=product._id%>" class="btn"> Details </a>
-							<%- include('../includes/add-to-cart.ejs',{product:product}) %>
+							
+							<% if(isAuthenticated){ %>
+								<%- include('../includes/add-to-cart.ejs',{product:product}) %>
+							<% } %>
 						</div>
 					</article>
 				<% }); %>

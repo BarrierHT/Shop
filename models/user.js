@@ -1,7 +1,6 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 const Order = require('./orders');
-const product = require('./product');
 
 const userSchema = new Schema({
     name: {
@@ -56,20 +55,20 @@ userSchema.methods.addToCart = function (prodId) {
 }
 
 userSchema.methods.deleteCartItem = function (prodId) {
-
+    
     const updatedCartItemIndex = this.cart.items.findIndex(cartItem => cartItem.productId.toString() === prodId.toString());
         let updatedCartItem = this.cart.items[updatedCartItemIndex];
-        
+    console.log('test: ', prodId);
         let updatedCart = [...this.cart.items];
         
         if(updatedCartItem){
             if(updatedCartItem.quantity > 1) updatedCartItem.quantity--;
             else updatedCartItem = -1;
         }
-        else return;
-
+        else return Promise.resolve();
+       
         updatedCartItem === -1 ? updatedCart.splice(updatedCartItemIndex,1) : updatedCart[updatedCartItemIndex] = updatedCartItem; 
-
+       
         return this.updateOne( {$set: { cart: {items:updatedCart} } });
 }
 

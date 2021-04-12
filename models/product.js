@@ -23,6 +23,29 @@ const productSchema = new Schema({
     description: String
 });
 
+// productSchema.methods.fetchTest = function() {
+
+//     console.log('fetchTest');
+
+//     return this.aggregate([ 
+//             { $project: { "price":1, "title":1, "_id":0 } },
+//             { $limit: 4 },
+//             { $skip: 1 },
+//             { $sort: {price: 1, title: -1} },
+//             { $group :
+//                 {
+//                 _id : "$_id",
+//                 totalSaleAmount: { $sum: { $multiply: [ "$price", 2 ] } },
+//                 count: { $sum: 1 }
+//                 }
+//             },
+//             { $match: { "totalSaleAmount": { $gte: 100 } } } ])
+//             .then(products => products)
+//             .catch(err => console.log(err));
+	
+
+// }
+
 
 const _preDelete = async function (next) {
     const product = await this.model.findOne(this.getFilter());
@@ -34,9 +57,11 @@ const _preDelete = async function (next) {
             users.map(user => {
                 const productdUserIndex = user.cart.items.findIndex(cartItem => cartItem.productId.toString() === productId.toString());
                 let productUser = user.cart.items[productdUserIndex];
-                if(productUser) user.cart.items.splice(productdUserIndex,1);
+                if(productUser){
+                    user.cart.items.splice(productdUserIndex,1);
+                    user.save();
+                } 
                 // console.log(user.cart.items);
-                user.save();
             })
         })
     // User.updateMany({ 'cart.items.productId': productId },
@@ -50,25 +75,3 @@ productSchema.pre('deleteOne', { document: true, query: true }, _preDelete);    
 
 
 module.exports = mongoose.model('Product', productSchema);
-
-
-// 	static fetchTest(){
-// 		const db = getDb(); 
-// 		return db.collection('products').aggregate([ 
-// 				{ $project: { "price":1, "title":1, "_id":0 } },
-// 				{ $limit: 4 },
-// 				{ $skip: 1 },
-// 				{ $sort: {price: 1, title: -1} } ])
-// 				.toArray()
-// 				.then(products => products)
-// 				.catch(err => console.log(err));
-// 	// return db.collection('products').updateMany({price:{$type: 'double'}},{$set: {
-// 	// 			price: 5.99	
-// 	// 		}})
-// 	// 		.then(products => products)
-// 	// 		.catch(err => console.log(err));
-// 	}
-// }
-
-
-// module.exports = Product;

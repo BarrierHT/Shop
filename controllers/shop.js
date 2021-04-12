@@ -1,16 +1,32 @@
 const Product = require('../models/product');
 const Order = require('../models/orders');
+const product = require('../models/product');
 
 exports.getIndex = (req,res) => {    
-    Product.find()		        						//* Model ---> Views		
-	.then(products => {
-        // console.log('products: ',products);
-        res.render('./shop/index.ejs',{
-            prods: products || [], docTitle: 'Main Shop',
-            path: req._parsedOriginalUrl.pathname
-        }); 
-	})
-	.catch(err => console.log(err));
+   
+    Product.aggregate([ 
+        { $project: { "price":1, "title":1 , "_id":1 } },
+        { $limit: 4 },
+        { $skip: 0 },
+        { $sort: {price: 1, title: -1} },
+        { $group :
+            {
+            _id : "_$id",
+            totalSaleAmount: { $sum: { $multiply: [ "$price", 2 ] } },
+            count: { $sum: 1 }
+            }
+        },
+        { $match: { "totalSaleAmount": { $gte: 10 } } } ])
+        .then(products => {
+            // console.log('products: ',products);
+            res.render('./shop/index.ejs',{
+                prods: products || [], docTitle: 'Main Shop',
+                path: req._parsedOriginalUrl.pathname,
+                isAuthenticated: req.session.isLoggedIn
+            }); 
+        })
+    .catch(err => console.log(err));
+    
 }
 
 exports.getProducts = (req,res,next) => {      
@@ -19,7 +35,8 @@ exports.getProducts = (req,res,next) => {
         // console.log(products);
         res.render('./shop/product-list.ejs',{
             prods: products || [], docTitle: 'All products',
-            path: req._parsedOriginalUrl.pathname
+            path: req._parsedOriginalUrl.pathname,
+            isAuthenticated: req.session.isLoggedIn
         }); 
 	})
 	.catch(err => console.log(err));
@@ -36,9 +53,11 @@ exports.getProduct = (req,res,next) => {
             product = {};
         };
         res.render('./shop/product-detail.ejs',{
-        docTitle: `Product: ${product.title}`,
-        product: product, 
-        path:'/products'});
+            docTitle: `Product: ${product.title}`,
+            product: product, 
+            path:'/products',
+            isAuthenticated: req.session.isLoggedIn
+        });
     })
     .catch(err => console.log(err));
 
@@ -47,52 +66,57 @@ exports.getProduct = (req,res,next) => {
 exports.postCart = (req,res) => {
     const prodId = req.body.id;
 
-        req.user
+    req.user
         .addToCart(prodId)
         .then(result => {
-            // console.log('result: ',result);
+            console.log('result: ',result);
             res.redirect(301,'/cart');
         })
         .catch(err => console.log(err));
 }
 
 exports.getCart = (req,res) => {
-    req.user
-        .populate('cart.items.productId', '-imageUrl')
-        .execPopulate()
-        .then(cartUser =>{
-            let products = cartUser.cart.items;            
-            let totalPrice = 0;
-
-            products = products.map(product => {
-                totalPrice+= (product.quantity*product.productId.price);
-                return {
-                    quantity: product.quantity,
-                    price: product.productId.price,
-                    title: product.productId.title,
-                    productId: product.productId._id
-                };
+    try {
+        req.user
+            .populate('cart.items.productId', '-imageUrl')
+            .execPopulate()
+            .then(cartUser =>{
+                let products = cartUser.cart.items;            
+                let totalPrice = 0;
+    
+                products = products.map(product => {
+                    totalPrice+= (product.quantity*product.productId.price);
+                    return {
+                        quantity: product.quantity,
+                        price: product.productId.price,
+                        title: product.productId.title,
+                        _id: product.productId._id
+                    };
+                })  
+                // console.log('products: ',products);
+                res.render('./shop/cart.ejs',{
+                        docTitle: `Cart Shop ${req.user._id}`, 
+                        path:req._parsedOriginalUrl.pathname,
+                        products: products,
+                        totalPrice: totalPrice,
+                        isAuthenticated: req.session.isLoggedIn
+                    });  
             })
-            
-            // console.log('products: ',products);
-            res.render('./shop/cart.ejs',{
-                docTitle: `Cart Shop ${req.user._id}`, 
-                path:req._parsedOriginalUrl.pathname,
-                products: products,
-                totalPrice: totalPrice
-            });  
-        })
-        .catch(err => console.log(err));
+            .catch(err => console.log(err));
+        
+    } catch (error) {
+            res.redirect('/');
+    }
 }
 
 exports.postDeleteCart = (req,res) => {
     const prodId = req.body.cartProductId;
 
-        req.user
+    return req.user
         .deleteCartItem(prodId)
         .then(result => {
             // console.log(result);
-            res.redirect(301,'/cart');
+            return res.redirect(301,'/cart');
         })
         .catch(err => console.log(err));
 }
@@ -109,8 +133,8 @@ exports.postOrder = (req,res) => {
 }
 
 exports.getOrders = (req,res) => {
-
-    Order.find({'user._id': req.user._id})
+    try {
+        Order.find({'user._id': req.user._id})
         .then(orders => {
 
             // console.log('orders: ',orders);
@@ -124,16 +148,21 @@ exports.getOrders = (req,res) => {
             res.render('./shop/orders.ejs',{
                 docTitle: 'Orders', 
                 path:req._parsedOriginalUrl.pathname,
-                orders: orders   
+                orders: orders,
+                isAuthenticated: req.session.isLoggedIn
             }); 
         })
         .catch(err => console.log(err));
-
+    } catch (error) {
+        res.redirect('/');
+    }
 }
 
 
 exports.getCheckout = (req,res) => {
     res.render('./shop/checkout.ejs',{
         docTitle: 'Checkout', 
-        path:req._parsedOriginalUrl.pathname});   
+        path:req._parsedOriginalUrl.pathname,
+        isAuthenticated: req.session.isLoggedIn  
+    });   
 }
