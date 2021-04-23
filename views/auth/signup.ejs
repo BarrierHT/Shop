@@ -10,28 +10,39 @@
 
 <main>
 
-    <form class="login-form" action="/login" method="POST"> 
+    <form class="login-form" action="/signup" method="POST"> 
         <div class="title-box">
-            <h3>Log in</h3>
+            <h3>Sign up</h3>
         </div>
-        
+
         <% if(errorMessage) { %> 
             <div class="user-message user-message--error">
                 Error: <%= errorMessage %> 
             </div>
         <% } %> 
-
+        
         <div class="form-control">
             <label for="email">Email</label> 
             <input type="email " name="email"  placeholder="Write the email" id="email">
         </div>
+
+        <div class="form-control">
+            <label for="name">Name</label> 
+            <input type="name" name="name" placeholder="Write your name" id="name">
+        </div>
+
         <div class="form-control">
             <label for="password">Password</label> 
             <input type="password" name="password"  placeholder="Write the password" id="password">
         </div>
+
+        <div class="form-control">
+            <label for="confirmPassword">Confirm Passowrd</label> 
+            <input type="password" name="confirmPassword"  placeholder="Write the password again" id="confirmPassword">
+        </div>
         
         <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-        <button class="btn" type="submit">Log in</button>
+        <button class="btn" type="submit">Sign up</button>
     </form> 
 
 

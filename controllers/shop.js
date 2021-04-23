@@ -20,9 +20,9 @@ exports.getIndex = (req,res) => {
         .then(products => {
             // console.log('products: ',products);
             res.render('./shop/index.ejs',{
-                prods: products || [], docTitle: 'Main Shop',
-                path: req._parsedOriginalUrl.pathname,
-                isAuthenticated: req.session.isLoggedIn
+                prods: products || [], 
+                docTitle: 'Main Shop',
+                path: req._parsedOriginalUrl.pathname
             }); 
         })
     .catch(err => console.log(err));
@@ -34,9 +34,9 @@ exports.getProducts = (req,res,next) => {
 	.then(products => {
         // console.log(products);
         res.render('./shop/product-list.ejs',{
-            prods: products || [], docTitle: 'All products',
-            path: req._parsedOriginalUrl.pathname,
-            isAuthenticated: req.session.isLoggedIn
+            prods: products || [],
+            docTitle: 'All products',
+            path: req._parsedOriginalUrl.pathname
         }); 
 	})
 	.catch(err => console.log(err));
@@ -55,8 +55,7 @@ exports.getProduct = (req,res,next) => {
         res.render('./shop/product-detail.ejs',{
             docTitle: `Product: ${product.title}`,
             product: product, 
-            path:'/products',
-            isAuthenticated: req.session.isLoggedIn
+            path:'/products'
         });
     })
     .catch(err => console.log(err));
@@ -69,14 +68,13 @@ exports.postCart = (req,res) => {
     req.user
         .addToCart(prodId)
         .then(result => {
-            console.log('result: ',result);
+            // console.log('result: ',result);
             res.redirect(301,'/cart');
         })
         .catch(err => console.log(err));
 }
 
 exports.getCart = (req,res) => {
-    try {
         req.user
             .populate('cart.items.productId', '-imageUrl')
             .execPopulate()
@@ -95,18 +93,14 @@ exports.getCart = (req,res) => {
                 })  
                 // console.log('products: ',products);
                 res.render('./shop/cart.ejs',{
-                        docTitle: `Cart Shop ${req.user._id}`, 
+                        docTitle: `Cart Shop - ${req.user.name}`, 
                         path:req._parsedOriginalUrl.pathname,
                         products: products,
-                        totalPrice: totalPrice,
-                        isAuthenticated: req.session.isLoggedIn
+                        totalPrice: totalPrice
                     });  
             })
             .catch(err => console.log(err));
-        
-    } catch (error) {
-            res.redirect('/');
-    }
+    
 }
 
 exports.postDeleteCart = (req,res) => {
@@ -133,7 +127,6 @@ exports.postOrder = (req,res) => {
 }
 
 exports.getOrders = (req,res) => {
-    try {
         Order.find({'user._id': req.user._id})
         .then(orders => {
 
@@ -148,21 +141,16 @@ exports.getOrders = (req,res) => {
             res.render('./shop/orders.ejs',{
                 docTitle: 'Orders', 
                 path:req._parsedOriginalUrl.pathname,
-                orders: orders,
-                isAuthenticated: req.session.isLoggedIn
+                orders: orders
             }); 
         })
         .catch(err => console.log(err));
-    } catch (error) {
-        res.redirect('/');
-    }
 }
 
 
 exports.getCheckout = (req,res) => {
     res.render('./shop/checkout.ejs',{
         docTitle: 'Checkout', 
-        path:req._parsedOriginalUrl.pathname,
-        isAuthenticated: req.session.isLoggedIn  
+        path:req._parsedOriginalUrl.pathname, 
     });   
 }

@@ -9,7 +9,8 @@ const userSchema = new Schema({
     },
     email: {
         type:String,
-        required:true
+        required:true,
+        unique:true
     },
     password: {
         type:String,
@@ -74,7 +75,8 @@ userSchema.methods.deleteCartItem = function (prodId) {
 
 userSchema.methods.addOrder = function(){
 
-    return this.populate('cart.items.productId', '-imageUrl')
+    return this
+            .populate('cart.items.productId', '-imageUrl')
             .execPopulate()
             .then(cartUser =>{
                 let products = cartUser.cart.items;            

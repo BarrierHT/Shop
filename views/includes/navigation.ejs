@@ -30,10 +30,14 @@
                     <li class="main-header__item">
                         <a class="<%= path === '/login' ? 'active' : '' %>" href="/login"> Login </a>
                     </li>
+                    <li class="main-header__item">
+                        <a class="<%= path === '/signup' ? 'active' : '' %>" href="/signup"> Sign up </a>
+                    </li>
             <% }else{ %> 
                 <li class="main-header__item">
-                <form action="/logout" method="POST">
-                        <button type="submit">Logout</button>
+                    <form action="/logout" method="POST">
+                            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                            <button type="submit">Logout</button>
                     </form>
                 </li>
             </ul>
@@ -65,12 +69,16 @@
                 <% } %>
                 <% if(!isAuthenticated){ %>
                     <li class="mobile-nav__item">
-                        <a href="/login">Login</a>
+                        <a class="<%= path === '/login' ? 'active' : '' %>" href="/login">Login</a>
+                    </li>
+                    <li class="mobile-nav__item">
+                        <a class="<%= path === '/signup' ? 'active' : '' %>" href="/signup"> Sign up </a>
                     </li>
                 <% } else{ %>
                     <li class="mobile-nav__item">
                         <form action="/logout" method="POST">
-                                <button type="submit">Logout</button>
+                            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                            <button type="submit">Logout</button>
                         </form>
                     </li>
                 <% } %>

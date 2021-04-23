@@ -2,26 +2,22 @@ const path = require('path');
 
 const express = require('express');
 
+const isAuth = require('../middlewares/is-Auth').isAuth;
 const adminController = require('../controllers/admin');
 
 const router = express.Router();
 
-router.get('/products', adminController.getProducts);
+router.get('/products', isAuth, adminController.getProducts);
 
-router.get('/add-product', adminController.getAddProduct);
+router.get('/add-product', isAuth, adminController.getAddProduct);
 
-router.post('/add-product', adminController.postAddproduct);
+router.post('/add-product', isAuth, adminController.postAddproduct);
 
-router.post('/delete-product', adminController.postDeleteProducts);
+router.post('/delete-product', isAuth, adminController.postDeleteProducts);
 
-router.post('/edit-product', adminController.postEditProducts);
+router.post('/edit-product', isAuth, adminController.postEditProducts);
 
-router.get('/edit-product/:productId', adminController.getEditProduct);
-
-router.get('/',(req,res,next) => {                                        
-    console.log(req.baseUrl);
-    res.send('<h1> You are in admin page </h1> ');                      //Sending a response (last Middleware) with auto Content-Type
-}); 
+router.get('/edit-product/:productId', isAuth, adminController.getEditProduct);
 
 
 exports.router = router;

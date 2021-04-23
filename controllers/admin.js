@@ -4,25 +4,21 @@ exports.getAddProduct = (req,res,next) => {
     res.render('./admin/edit-product.ejs',{
         docTitle:'Add Products', 
         path: req._parsedOriginalUrl.pathname || req_parsedUrl.pathname,
-        editing: false,
-        isAuthenticated: req.session.isLoggedIn
+        editing: false
     });              
 }
 
 exports.postAddproduct = (req,res,next) => {
     const {title,price,description,imageUrl} = req.body;    
     let product;
-    try {
+   
         product = new Product({
             title:title,
             price:price,
             description:description,
             userId: req.user._id
         });
-    } catch (error) {
-        return res.redirect('/');
-    }
-
+   
     imageUrl.length > 0 ? product.imageUrl = imageUrl : product.imageUrl;
 
     product
@@ -39,7 +35,6 @@ exports.getProducts = (req,res) => {
     // const cond = {
     //     userId: ObjectId(req.user._id)
     // };
-    try {
         Product.find({userId: req.user._id})
         // .select('name imageUrl price -_id')
             .populate('userId','name email')               //Joins, retrieve data from another collections
@@ -48,17 +43,13 @@ exports.getProducts = (req,res) => {
                 res.render('./admin/products.ejs',{
                     prods: products || [],
                     docTitle: 'All products',
-                    path: req._parsedOriginalUrl.pathname,
-                    isAuthenticated: req.session.isLoggedIn
+                    path: req._parsedOriginalUrl.pathname
                 }); 
             })
             .catch(err => {
                 console.log(err);
             });		
-    } catch (error) {
-        res.redirect('/');
-    }
-    
+
 }
 
 exports.getEditProduct = (req,res) => {
@@ -74,8 +65,7 @@ exports.getEditProduct = (req,res) => {
                     docTitle:'Edit Products', 
                     path: '/admin/edit-product',                                      //? Main Path
                     editing: editMode,
-                    product:product,
-                    isAuthenticated: req.session.isLoggedIn
+                    product:product
                 })
             })
             .catch(err => console.log(err));

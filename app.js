@@ -3,18 +3,20 @@ const path = require('path');
 const express = require('express');
 require('dotenv').config();
 const session = require('express-session');
-const MongoStore = require('connect-mongo');
+const csrf = require('csurf');
+const flash = require('connect-flash');
 const mongoose = require('mongoose');
+const MongoStore = require('connect-mongo');
 const bodyParser = require('body-parser');
+const cookieParser = require('cookie-parser');
 
 const infoData = require('./controllers/info');
 const adminRoutes = require('./routes/admin');
 const shopRoutes = require('./routes/shop');
 const authRoutes = require('./routes/auth');
 const rootDir = require('./util/path');
-
-
 const User = require('./models/user');                                  //Mongoose model
+
 const app = express();                                                  //Get main express function
 
 const mongoUser = process.env.MONGO_USER;
@@ -22,12 +24,13 @@ const mongoPassword = process.env.MONGO_PASSWORD;
 const mongoDatabase = process.env.MONGO_DATABASE;
 const mongoDBUrl = `mongodb+srv://${mongoUser}:${mongoPassword}@node-course.msdnf.mongodb.net/${mongoDatabase}?retryWrites=true&w=majority`;
 
-app.locals.user = 'BarrierHT';
+app.locals.user = 'BarrierHT';                                          //Local app Variables                                                
 
 app.set('view engine','ejs');
 app.set('views','views/');                   
 app.set('port', process.env.PORT || 3000);
 
+app.use(cookieParser());
 app.use( bodyParser.urlencoded( {extended:false} ) );
 app.use( express.static( path.join(rootDir,'public') ) );
 
@@ -46,16 +49,34 @@ app.use( session({
     ,cookie: {maxAge: 60 * 60 * 1000 }
 }));
 
+app.use( csrf({cookie:false}) );                                         //Protect against csrf
+
+app.use(flash());
+
 app.use( (req,res,next) => {
     if(req.session.user){
         User.findById(req.session.user._id)
         .then(user => {
-            if(user) req.user = user;                                       //Use Mongoose Methods
+            if(user) req.user = user;                                    //Use Mongoose Methods
             next();
         })
         .catch(err => console.log('error: ', err));
     }
     else next();
+});
+
+app.use( (err, req, res, next) => {
+    console.log('error(server): ' , err);
+    if(err.code == 'EBADCSRFTOKEN'){                                         // handle CSRF token errors here
+        return res.status(403).send('Token not found');
+    } 
+    else next(err);
+});
+
+app.use( (req, res, next) => {
+    res.locals.isAuthenticated = req.session.isLoggedIn;
+    res.locals.csrfToken = req.csrfToken();                                             //*Use Token for every view (Local Response Variables)
+    next();
 });
 
 app.use (  (req, res, next) => {                                                        //*Refresh cookie-session time
@@ -73,10 +94,9 @@ app.use (  (req, res, next) => {                                                
                 });
             // console.log('cookie: ', cookies);
         } catch (error) {
-            console.log('error(TryCatch): ',error);
+            console.log('error(session refresh): ',error);
         }
     }
-
     next();
 });
 
@@ -92,20 +112,7 @@ app.use(infoData.get404);
 // console.log(process.env);
 
 mongoose.connect(mongoDBUrl, {useNewUrlParser: true, useUnifiedTopology: true})
-    .then(result => User.findById('6014fc3d8aed0b3f8cee5c66')) 
-    .then(user => {
-        if(!user){
-            console.log('hi');
-            const user = new User({
-                name: 'Ramon',
-                email: 'test2@gmail.com',
-                password: '111',
-                cart: { items: [] }
-            });
-            return User.insertMany([user]);
-        }
-    })
-    .then( () => app.listen(app.get('port')) )
+    .then( result => app.listen(app.get('port')) )
     .catch(err => console.log(err));
 
 
