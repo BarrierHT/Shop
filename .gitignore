@@ -1,6 +1,5 @@
 #Node modules
-node_modules/
-node_modules
+./node_modules
 #Enviroment Variables
 .env
 #bin folder
