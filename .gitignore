@@ -1,5 +1,5 @@
-#Node modules
-/node_modules/
+#dependencies    
+/node_modules
 #Enviroment Variables
 .env
 #bin folder
