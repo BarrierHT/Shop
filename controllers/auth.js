@@ -5,12 +5,7 @@ const User = require('../models/user');
 
 exports.getLogin = (req,res,next) => {
 
-   let isLoggedIn = req.session.isLoggedIn;
-   
-   let errorMessage =  req.flash('errorLogin');
-   
-//    if(errorMessage) errorMessage = errorMessage[0];
-//    else errorMessage = null;
+    let errorMessage =  req.flash('errorLogin');
     errorMessage = errorMessage.length > 0 ? errorMessage[0] : null; 
 
     console.log('isLoggedIn: ',req.session.isLoggedIn);
@@ -61,8 +56,7 @@ exports.postLogin = (req,res,next) => {
 exports.getSignUp = (req,res,next) => {
 
     let errorMessage =  req.flash('errorSignUp');
-    if(errorMessage) errorMessage = errorMessage[0];
-    else errorMessage = null;
+    errorMessage = errorMessage.length > 0 ? errorMessage[0] : null; 
 
     res.render('auth/signup.ejs', {
         docTitle: 'Sign up',
