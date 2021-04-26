@@ -2,5 +2,7 @@
 /node_modules
 #Enviroment Variables
 .env
+#vscode Settings
+/.vscode
 #bin folder
 bin/

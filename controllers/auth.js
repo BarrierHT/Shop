@@ -9,18 +9,9 @@ exports.getLogin = (req,res,next) => {
    
    let errorMessage =  req.flash('errorLogin');
    
-   if(errorMessage) errorMessage = errorMessage[0];
-   else errorMessage = null;
-
-    // try {
-    //     isLoggedIn = req
-    //     .get('Cookie')
-    //     .split(';')[0]
-    //     .trim()
-    //     .split('=')[1] === 'true';
-    // } catch (error) {
-    //         console.log('error: ', error);
-    // }
+//    if(errorMessage) errorMessage = errorMessage[0];
+//    else errorMessage = null;
+    errorMessage = errorMessage.length > 0 ? errorMessage[0] : null; 
 
     console.log('isLoggedIn: ',req.session.isLoggedIn);
     res.render('auth/login.ejs', {
