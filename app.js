@@ -75,12 +75,12 @@ app.use( (err, req, res, next) => {
 
 app.use( (req, res, next) => {
     res.locals.isAuthenticated = req.session.isLoggedIn;
+    res.locals.isVerified = req.session.isVerified;
     res.locals.csrfToken = req.csrfToken();                                             //*Use Token for every view (Local Response Variables)
     next();
 });
 
 app.use (  (req, res, next) => {                                                        //*Refresh cookie-session time
-    // console.log('cookie session1: ',req.session.cookie);
     if(req.session.user){
         try {
             let cookies = req.get('Cookie');
@@ -92,7 +92,6 @@ app.use (  (req, res, next) => {                                                
                         // console.log('valueCookie: ',valueCookie);
                     }
                 });
-            // console.log('cookie: ', cookies);
         } catch (error) {
             console.log('error(session refresh): ',error);
         }
@@ -108,11 +107,10 @@ app.use(authRoutes.router);
 
 app.use(infoData.get404);
 
-
-// console.log(process.env);
-
 mongoose.connect(mongoDBUrl, {useNewUrlParser: true, useUnifiedTopology: true})
-    .then( result => app.listen(app.get('port')) )
+    .then( result => {
+        app.listen(app.get('port')) 
+    })
     .catch(err => console.log(err));
 
 

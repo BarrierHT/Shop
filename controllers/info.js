@@ -7,10 +7,12 @@ exports.get404 = (req,res,next) =>{
     });
 }
 
-exports.firstMiddleware = (req,res,next) => {               
+exports.firstMiddleware = (req,res,next) => {            
+       
     // console.log(req);                            
-    console.log('This is always running');
-    console.log('url:' , req._parsedUrl.pathname);    
-    console.log('current User: ', req.user);
+    // console.log('This is always running');
+    console.log('current Url:' , req._parsedUrl.pathname);          //req._parsedOriginalUrl.pathname
+    // console.log('current User: ', req.user);
+
     next();                                                             
 }

@@ -19,6 +19,7 @@
   "devDependencies": {
     "dotenv": "^8.2.0",
     "express": "^4.17.1",
+    "jsonwebtoken": "^8.5.1",
     "nodemon": "^2.0.6",
     "sequelize": "^6.3.5"
   },
@@ -29,14 +30,19 @@
     "connect-mongo": "^4.4.1",
     "connect-mongodb-session": "^2.4.1",
     "cookie-parser": "^1.4.5",
+    "crypto-js": "^4.0.0",
     "csurf": "^1.11.0",
     "ejs": "^3.1.5",
     "express-handlebars": "^3.0.2",
     "express-session": "^1.17.1",
+    "lodash": "^4.17.21",
     "mongodb": "^3.6.3",
     "mongoose": "^5.11.8",
     "mysql2": "^2.2.5",
+    "nodemailer": "^6.5.0",
+    "nodemailer-sendgrid-transport": "^0.2.0",
     "pug": "^3.0.0",
+    "random-bytes": "^1.0.0",
     "uuid": "^8.3.2"
   }
 }

@@ -1,0 +1,30 @@
+<%- include('../includes/head.ejs') %>
+
+</head>
+
+<body>
+
+<%- include('../includes/navigation.ejs') %>
+
+<main>
+    <div class="title-box">
+        <h2 class="user-message">Please, verify your account before using the page </h2>
+        <form action="/confirmation" method="POST">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+            <p class="title-box">
+                <% if(errorMessage){ %>
+                    <div style="padding: 1em; background-color: rgb(231, 99, 99); color:rgba(255, 255, 255, 0.89); margin:.5em">
+                        <%= errorMessage %> 
+                    </div>
+                <% } %>  
+                <cite>
+                    Did not you receive your e-mail? Click this button to re-send it
+                </cite>
+            </p>
+            <button type="submit" class="btn"> Send E-mail to verify account </button>
+        </form>
+    </div>
+</main>
+
+
+<%- include('../includes/end.ejs') %>
