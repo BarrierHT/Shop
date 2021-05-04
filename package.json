@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "This is a practice of NPM",
   "main": "app.js",
+  "type": "commonjs",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node app.js",
@@ -31,6 +32,7 @@
     "connect-mongodb-session": "^2.4.1",
     "cookie-parser": "^1.4.5",
     "crypto-js": "^4.0.0",
+    "crypto-random-string": "^4.0.0",
     "csurf": "^1.11.0",
     "ejs": "^3.1.5",
     "express-handlebars": "^3.0.2",

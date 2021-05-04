@@ -1,6 +1,5 @@
 const Product = require('../models/product');
 const Order = require('../models/orders');
-const product = require('../models/product');
 
 exports.getIndex = (req,res) => {    
    

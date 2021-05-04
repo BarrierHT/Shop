@@ -7,8 +7,10 @@ exports.get404 = (req,res,next) =>{
     });
 }
 
-exports.firstMiddleware = (req,res,next) => {            
-       
+exports.firstMiddleware = async (req,res,next) => {            
+    // const cryptoRandomString = await import('crypto-random-string');
+    // console.log( 'crypto: ', cryptoRandomString.default({length:64, type:'base64'}) ); 
+    
     // console.log(req);                            
     // console.log('This is always running');
     console.log('current Url:' , req._parsedUrl.pathname);          //req._parsedOriginalUrl.pathname

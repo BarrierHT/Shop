@@ -1,7 +1,4 @@
-const path = require('path');
-
 const express = require('express');
-
 
 const isAuth = require('../middlewares/is-Auth').isAuth;
 const isNotAuth = require('../middlewares/is-Auth').isNotAuth;
@@ -17,9 +14,17 @@ router.get('/login', isNotAuth, authController.getLogin);
 
 router.get('/signup', isNotAuth, authController.getSignUp);
 
-router.get('/confirmation',isAuth, isNotVerified, authController.getConfirmation);
+router.get('/confirmation', isAuth, isNotVerified, authController.getConfirmation);
 
-router.post('/confirmation',isAuth, isNotVerified, authController.postEmailToken);
+router.get('/reset-password', isNotAuth, authController.getReset);
+
+router.post('/reset-password', isNotAuth, authController.postReset);
+
+router.get('/reset-password/:resetToken', isNotAuth, authController.getResetToken);
+
+router.post('/new-password', isNotAuth, authController.postNewPassword);
+
+router.post('/confirmation', isAuth, isNotVerified, authController.postEmailToken);
 
 router.get('/confirmation/:token', authController.getEmailToken);
 
