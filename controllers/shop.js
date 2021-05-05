@@ -45,24 +45,19 @@ exports.getProduct = (req,res,next) => {
     const productId = req.params.productId;
     Product.findById(productId)
     .then( product  => {
-        // console.log('product: ',product);
-        try{
-            product.imageUrl = product.imageUrl;                            //?Problem with img Url request (too long)
-        }catch(err){
-            product = {};
-        };
-        res.render('./shop/product-detail.ejs',{
-            docTitle: `Product: ${product.title}`,
-            product: product, 
-            path:'/products'
-        });
+            res.render('./shop/product-detail.ejs',{
+                docTitle: `Product: ${product.title}`,
+                product: product, 
+                path:'/products'
+            });
     })
-    .catch(err => console.log(err));
-
+    .catch(err => {
+        console.log('error: ', err);
+    });
 }
 
 exports.postCart = (req,res) => {
-    const prodId = req.body.id;
+    const prodId = req.body.productId;
 
     req.user
         .addToCart(prodId)
