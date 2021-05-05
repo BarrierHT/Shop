@@ -1,14 +1,14 @@
 //const secret = require('random-bytes').sync(64).toString('hex');
-
-const objectIdValid = require('../util/data-types').objectIdValid;
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const _ = require("lodash");
 const nodemailer = require('nodemailer');
 const sendgridTransport = require('nodemailer-sendgrid-transport');
 
+const BlockListToken = require('../models/blocklist-token');
 const User = require('../models/user');
 const differenceTimeStamp = require('../util/timestamp');
+const objectIdValid = require('../util/data-types').objectIdValid;
 
 const transporter = nodemailer.createTransport(sendgridTransport({
     auth:{
@@ -17,18 +17,32 @@ const transporter = nodemailer.createTransport(sendgridTransport({
 }));
 
 exports.getEmailToken = async (req,res,next) => {
+    const emailToken = req.params.token;
 
     try {
-        const { user: { _id } } = jwt.verify(req.params.token, process.env.SECRET_EMAIL);
-        // console.log('id: ', _id);
-        await User.updateOne( {_id:_id}, { $set: { verified: true } } );
-        if(_id) req.session.isVerified = true;
+        let { user: { _id }, creationDate } = jwt.verify(emailToken, process.env.SECRET_EMAIL);
+
+        await BlockListToken.findOne({ type:'email_verification', tokenValue:emailToken })
+                .then(async (blockListRecord) => {
+                    if(blockListRecord) return res.status(401).send('Token was used already');                      //Invalid Token
+                    else{
+                        creationDate = new Date(creationDate);
+                        let expireDate = new Date(creationDate.setHours(creationDate.getHours() + 1));
+                        expireDate = expireDate.setMinutes(expireDate.getMinutes() + 5);
+
+                        await User.updateOne( {_id:_id}, { $set: { verified: true } } );
+                        await BlockListToken.insertMany([{type:'email_verification', tokenValue:emailToken, expire_at:expireDate}]);
+                        req.session.isVerified = true;
+                        return res.redirect('/');
+                    }
+                })
+                .catch(err => console.log(err));
+
     } catch (err) {
         console.log(err);
         return res.status(403).send('Token not found');
     }
     
-    return res.redirect('/');
 }
 
 const postEmailToken = async (req,res,next) => {
@@ -39,7 +53,7 @@ const postEmailToken = async (req,res,next) => {
     if(difference.minutesDifference >= 5){
         req.session.lastEmailToken = new Date();
         jwt.sign(
-            { user: _.pick(req.session.user,'_id') },
+            { user: _.pick(req.session.user,'_id'), creationDate: new Date() },
             process.env.SECRET_EMAIL,
             { expiresIn: '1h' },
             (err, emailToken) => {
@@ -127,44 +141,44 @@ exports.postSignUp = async (req,res,next) => {
     const {email,password,confirmPassword,name} = req.body;
     let userCreated;
 
-    User.findOne({email})
-        .then(user => {
-            if(user){
-                req.flash('errorSignUp','Email is taken already.');
-                return null;
-            }
-            else return bcrypt.hash(password,12);                                          //*Encrypt Password
-        })
-        .then( hashedPassword => {
-            if(hashedPassword){
-                    const user = new User({
-                        email,
-                        password: hashedPassword,
-                        name,
-                        verified:false,
-                        cart: { items:[] },
-                    });
-                    userCreated = user;
-                return user.save();
-            }
-            else return null;
-        })
-        .then( (user) =>{
-            if(user){
-                console.log('User created');
-                    req.session.user = userCreated;                                                        //* Create a req.session.user in the middleware
-                    req.session.isLoggedIn = true;
-                    req.session.isVerified = false;
-                    req.session.lastEmailToken =  new Date(1262304000000);                                 //Old Timestamp
+    await User.findOne({email})
+            .then(user => {
+                if(user){
+                    req.flash('errorSignUp','Email is taken already.');
+                    return null;
+                }
+                else return bcrypt.hash(password,12);                                          //*Encrypt Password
+            })
+            .then( hashedPassword => {
+                if(hashedPassword){
+                        const user = new User({
+                            email,
+                            password: hashedPassword,
+                            name,
+                            verified:false,
+                            cart: { items:[] },
+                        });
+                        userCreated = user;
+                    return user.save();
+                }
+                else return null;
+            })
+            .then( (user) =>{
+                if(user){
+                    console.log('User created');
+                        req.session.user = userCreated;                                                        //* Create a req.session.user in the middleware
+                        req.session.isLoggedIn = true;
+                        req.session.isVerified = false;
+                        req.session.lastEmailToken =  new Date(1262304000000);                                 //Old Timestamp
 
-                    req.session.save( (error) => {
-                        console.log('error(session-login):', error);
-                            return postEmailToken(req,res,next);
-                    });
-            }
-            else return res.redirect('/signup');
-        })
-        .catch(error => console.log('error: ' , error));
+                        req.session.save( (error) => {
+                            console.log('error(session-login):', error);
+                                return postEmailToken(req,res,next);
+                        });
+                }
+                else return res.redirect('/signup');
+            })
+            .catch(error => console.log('error: ' , error));
 
 };
 
@@ -202,11 +216,11 @@ exports.postReset = async(req,res,next) => {
     await User.findOne({email})
         .then(user => {
             if(!user){
-                req.flash('errorEmailReset','Email not signed up');
+                req.flash('errorEmailReset','Email is not signed up');
             }
             else{
                 jwt.sign( 
-                    {user: _.pick(user,'_id')},
+                    {user: _.pick(user,'_id'), creationDate : new Date()},
                     process.env.SECRET_RESET_PASSWORD,
                     {expiresIn: '1h'},
                         (err,emailToken) => {
@@ -225,35 +239,46 @@ exports.postReset = async(req,res,next) => {
         })
         .catch(err => console.log(err));
     
-    return res.redirect('/');
+    return res.redirect('/reset-password');
 }
 
-exports.getResetToken = (req,res,next) => {
+exports.getResetToken = async (req,res,next) => {
     const resetToken = req.params.resetToken;
-    let _id;
-    let errorMessage = req.flash('errorToken');
-    errorMessage = errorMessage.length > 0 ? errorMessage[0] : null; 
 
     try {
-        _id = jwt.verify(resetToken,process.env.SECRET_RESET_PASSWORD).user._id.toString();
+        let { user: { _id }, creationDate } = jwt.verify(resetToken, process.env.SECRET_RESET_PASSWORD);
+        
+        await BlockListToken.findOne({ type:'password_reset', tokenValue:resetToken })
+            .then(async (blockListRecord) => {
+                if(blockListRecord) return res.status(401).send('Token was used already');                      //Invalid Token
+                else{
+                    creationDate = new Date(creationDate);
+                    let expireDate = new Date(creationDate.setHours(creationDate.getHours() + 1));
+                    expireDate = expireDate.setMinutes(expireDate.getMinutes() + 5);
+
+                    await BlockListToken.insertMany([{type:'password_reset', tokenValue:resetToken, expire_at:expireDate}]);
+                    res.render('auth/new-password',{
+                        docTitle: 'Update Password',
+                        path: req._parsedOriginalUrl,
+                        userId: _id ?? 'UserNotFound',
+                        errorMessage
+                    })
+                }
+        })
+        .catch(err => console.log(err));
+
     } catch (err) {
         console.log(err);
-        req.flash('errorToken','Token error, reload the page or write a valid token');
+        return res.status(403).send('Token not found');
     }
     
-    res.render('auth/new-password',{
-        docTitle: 'Update Password',
-        path: req._parsedOriginalUrl,
-        userId: _id ?? 'NotUserFound',
-        errorMessage
-    })
 }
 
 exports.postNewPassword = async(req,res,next) => {
     let {userId, password, confirmPassword} = req.body;
     let updatedUser;
 
-    if(!objectIdValid(userId)) userId = 'NotUserFound';
+    if(!objectIdValid(userId)) userId = 'UserNotFound';
 
         await User.findOne({_id:userId})
         .then(user => {
