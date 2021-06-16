@@ -1,5 +1,7 @@
 const express = require('express');
 
+const  userValidationRules  = require('../middlewares/validator').userValidationRules;
+
 const isAuth = require('../middlewares/is-Auth').isAuth;
 const isNotAuth = require('../middlewares/is-Auth').isNotAuth;
 
@@ -18,19 +20,19 @@ router.get('/confirmation', isAuth, isNotVerified, authController.getConfirmatio
 
 router.get('/reset-password', isNotAuth, authController.getReset);
 
-router.post('/reset-password', isNotAuth, authController.postReset);
+router.post('/reset-password', isNotAuth, userValidationRules('body--email'),authController.postReset);
 
 router.get('/reset-password/:resetToken', isNotAuth, authController.getResetToken);
 
-router.post('/new-password', isNotAuth, authController.postNewPassword);
+router.post('/new-password', isNotAuth, userValidationRules('body--password','body--confirmPassword') , authController.postNewPassword);
 
 router.post('/confirmation', isAuth, isNotVerified, authController.postEmailToken);
 
 router.get('/confirmation/:token', authController.getEmailToken);
 
-router.post('/login', isNotAuth, authController.postLogin);
+router.post('/login', isNotAuth, userValidationRules('body--email','body--password') ,authController.postLogin);
 
-router.post('/signup', isNotAuth, authController.postSignUp);
+router.post('/signup', isNotAuth, userValidationRules('body--email','body--name','body--password','body--confirmPassword'), authController.postSignUp);
 
 router.post('/logout', isAuth, authController.postLogout);
 

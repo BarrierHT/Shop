@@ -67,7 +67,7 @@ app.use( (req,res,next) => {
 
 app.use( (err, req, res, next) => {
     console.log('error(server): ' , err);
-    if(err.code == 'EBADCSRFTOKEN'){                                         // handle CSRF token errors here
+    if(err.code == 'EBADCSRFTOKEN'){                                         //Handle CSRF token errors here
         return res.status(403).send('Token not found');
     } 
     else next(err);
@@ -112,7 +112,4 @@ mongoose.connect(mongoDBUrl, {useNewUrlParser: true, useUnifiedTopology: true})
         app.listen(app.get('port')) 
     })
     .catch(err => console.log(err));
-
-
-
 

@@ -61,6 +61,7 @@ userSchema.methods.addToCart = function (prodId) {
 }
 
 userSchema.methods.deleteCartItem = function (prodId) {
+    console.log('test: ', prodId);
     
     const updatedCartItemIndex = this.cart.items.findIndex(cartItem => cartItem.productId.toString() === prodId.toString());
         let updatedCartItem = this.cart.items[updatedCartItemIndex];

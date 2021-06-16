@@ -22,11 +22,17 @@ label{
     border: solid #10C7DD 2px;
     border-radius: 2px;
     width: 100%;
+    margin: 1.6rem 0;
 }
 .form-control input:focus,
 .form-control textarea:focus{
     outline-color: purple;
 }
+
+/* .form-control input.invalid{
+    border: red 2px solid;
+} */
+
 .product-form{
     width: 20rem;
     max-width: 90%;
@@ -34,6 +40,7 @@ label{
 }
 textarea{
     max-width:100%; 
+    min-width:50%; 
     max-height:10.6rem;
 }
 

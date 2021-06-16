@@ -1,9 +1,9 @@
 const express = require('express');
 
+const  userValidationRules  = require('../middlewares/validator').userValidationRules;
+
 const isAuth = require('../middlewares/is-Auth').isAuth;
-
 const isVerified = require('../middlewares/is-Verified').isVerified;
-
 
 const shopController = require('../controllers/shop');
 
@@ -14,7 +14,7 @@ router.get('/', shopController.getIndex);
 
 router.get('/products', shopController.getProducts);
 
-router.get('/products/:productId', shopController.getProduct);                         //Dynamic Route
+router.get('/products/:productId', userValidationRules('param--objectId_productId'),shopController.getProduct);                         //Dynamic Route
 
 router.get('/cart', isAuth, isVerified, shopController.getCart);
 

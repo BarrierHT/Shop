@@ -19,19 +19,39 @@
             
             <div class="form-control">
                 <label for="title">Title</label> 
-                <input type="text" name="title"  placeholder="Write the title" id="title" value="<%=editing? product.title  : '' %>">
+                <% if(errorMessage.hasOwnProperty('title')){ %> 
+                    <div class="user-message user-message--error">
+                        Error: <%= errorMessage.title %>
+                    </div>
+                <% } %>  
+                <input type="text" name="title"  placeholder="Write the title" id="title" value="<%=editing? product.title  : (oldInput ? userData.title : '') %>">
             </div>
             <div class="form-control">
                 <label for="price">Price</label> 
-                <input type="number" name="price"  placeholder="Write the price" id="price" step="0.01" value="<%=editing? product.price  : '' %>">  
+                <% if(errorMessage.hasOwnProperty('price')){ %> 
+                    <div class="user-message user-message--error">
+                        Error: <%= errorMessage.price %>
+                    </div>
+                <% } %>  
+                <input type="number" name="price"  placeholder="Write the price" id="price" step="0.01" value="<%=editing? product.price  : (oldInput ? userData.price : '') %>">  
             </div>
             <div class="form-control">
                 <label for="description">Description</label> 
-                <textarea name="description" id="description" placeholder="Write the description"><%=editing? product.description  : '' %></textarea>
+                <% if(errorMessage.hasOwnProperty('description')){ %> 
+                    <div class="user-message user-message--error">
+                        Error: <%= errorMessage.description %>
+                    </div>
+                <% } %>  
+                <textarea name="description" id="description" placeholder="Write the description"><%=editing? product.description  : (oldInput ? userData.description : '')%></textarea>
             </div>
             <div class="form-control">
                 <label for="imageUrl">Image URL</label> 
-                <input type="text" name="imageUrl"  placeholder="Write the description" id="imageUrl" value="<%=editing? product.imageUrl  : '' %>">
+                <% if(errorMessage.hasOwnProperty('imageUrl')){ %> 
+                    <div class="user-message user-message--error">
+                        Error: <%= errorMessage.imageUrl %>
+                    </div>
+                <% } %>  
+                <input type="text" name="imageUrl"  placeholder="Write the description" id="imageUrl" value="<%=editing? product.imageUrl  : (oldInput ? userData.imageUrl : '') %>">
             </div>
             <% if(editing) { %> <input type="hidden" value="<%=product._id%>" name="productId"> <% }%>
             

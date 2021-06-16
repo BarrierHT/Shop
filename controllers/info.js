@@ -13,6 +13,7 @@ exports.firstMiddleware = async (req,res,next) => {
     
     // console.log(req);                            
     // console.log('This is always running');
+    console.log('Current method: ', req.method);
     console.log('current Url:' , req._parsedUrl.pathname);          //req._parsedOriginalUrl.pathname
     // console.log('current User: ', req.user);
 

@@ -8,7 +8,7 @@ const sendgridTransport = require('nodemailer-sendgrid-transport');
 const BlockListToken = require('../models/blocklist-token');
 const User = require('../models/user');
 const differenceTimeStamp = require('../util/timestamp');
-const objectIdValid = require('../util/data-types').objectIdValid;
+const { validate } = require('../middlewares/validator');
 
 const transporter = nodemailer.createTransport(sendgridTransport({
     auth:{
@@ -47,30 +47,32 @@ exports.getEmailToken = async (req,res,next) => {
 
 const postEmailToken = async (req,res,next) => {
 
-    const difference = differenceTimeStamp.getDifference( new Date(), new Date(req.session.lastEmailToken) );
-    // console.log('difference: ', difference);
-
-    if(difference.minutesDifference >= 5){
-        req.session.lastEmailToken = new Date();
-        jwt.sign(
-            { user: _.pick(req.session.user,'_id'), creationDate: new Date() },
-            process.env.SECRET_EMAIL,
-            { expiresIn: '1h' },
-            (err, emailToken) => {
-                const url = `http://localhost:3000/confirmation/${emailToken}`;
-                console.log('error(emailToken): ', err);
+    if(req.user._id == req.session.user._id){
+        const difference = differenceTimeStamp.getDifference( new Date(), new Date(req.session.lastEmailToken) );
+        // console.log('difference: ', difference);
     
-                transporter.sendMail({
-                    to: req.session.user.email,
-                    from: process.env.EMAIL_USER,
-                    subject:'Confirm Email',
-                    html: `<div style="overflow:auto; padding:15px;"> Please click this link to verify your email <mark>(This link has 1 hour to be used)</mark>: <a target="_blank" href="${url}">${url}</a> </div>`,
-                });
-            }
-        );
-    }
-    else await req.flash('errorEmailToken','An e-mail was sent already, wait 5 minutes to send another verification email');
-
+        if(difference.minutesDifference >= 5){
+            req.session.lastEmailToken = new Date();
+            jwt.sign(
+                { user: _.pick(req.session.user,'_id'), creationDate: new Date() },
+                process.env.SECRET_EMAIL,
+                { expiresIn: '1h' },
+                (err, emailToken) => {
+                    const url = `http://localhost:3000/confirmation/${emailToken}`;
+                    console.log('error(emailToken): ', err);
+        
+                    transporter.sendMail({
+                        to: req.session.user.email,
+                        from: process.env.EMAIL_USER,
+                        subject:'Confirm Email',
+                        html: `<div style="overflow:auto; padding:15px;"> Please click this link to verify your email <mark>(This link has 1 hour to be used)</mark>: <a target="_blank" href="${url}">${url}</a> </div>`,
+                    });
+                }
+            );
+        }
+        else await req.flash('errorEmailToken','An e-mail was sent already, wait 5 minutes to send another verification email');
+    } 
+    
     return res.redirect('/confirmation');
 };
 
@@ -79,69 +81,98 @@ exports.postEmailToken = postEmailToken;
 exports.getLogin = (req,res,next) => {
 
     let errorMessage =  req.flash('errorLogin');
-    errorMessage = errorMessage.length > 0 ? errorMessage[0] : null; 
+    errorMessage = errorMessage.length > 0 ? {errorLogin: errorMessage[0]} : {}; 
 
     res.render('auth/login.ejs', {
         path: req._parsedOriginalUrl.pathname,
         docTitle: 'Login',
-        errorMessage
+        errorMessage,
+        oldInput: false
     })
 };
 
 exports.postLogin = (req,res,next) => {
     const {email, password} = req.body;
     
-    User.findOne({email})
-    .then(user => {
-        if(user){
-            bcrypt.compare(password, user.password)
-            .then(doMatch => {
-                if(doMatch){
-                    req.session.user = user;                                                           //* Create a req.session.user in the middleware
-                    req.session.isLoggedIn = true;
-                    req.session.isVerified = user.verified;
-                    req.session.lastEmailToken =  !(user.verified)? new Date(1262304000000) : null ;   //Old Timestamp
+    const validationErrors = validate(req);
 
-                    req.session.save( (error) => {
-                        console.log('error(session):', error);
-                        return res.redirect('/confirmation');
-                    });
-                }
-                else{
-                    req.flash('errorLogin','Invalid email or password.');
-                    return  res.redirect('/login');
-                }
-            })
-            .catch( err => {
-                console.log('error: ' , err);
-                res.redirect('/');
-            } );
+    if(Object.keys(validationErrors).length > 0){
+        res.status(422).render('auth/login.ejs',{
+            path: req._parsedUrl.pathname,
+            docTitle: 'Login',
+            oldInput: true,
+            errorMessage: validationErrors,
+            userData: {email,password}
+        })
+    }
+    else {
+        User.findOne({email})
+        .then(user => {
+            if(user){
+                bcrypt.compare(password, user.password)
+                .then(doMatch => {
+                    if(doMatch){
+                        req.session.user = user;                                                           //* Create a req.session.user in the middleware
+                        req.session.isLoggedIn = true;
+                        req.session.isVerified = user.verified;
+                        req.session.lastEmailToken =  !(user.verified)? new Date(1262304000000) : null ;   //Old Timestamp
+
+                        req.session.save( (error) => {
+                            console.log('error(session):', error);
+                            return res.redirect('/confirmation');
+                        });
+                    }
+                    else{
+                        req.flash('errorLogin','Invalid email or password (No registered).');
+                        return  res.redirect('/login');
+                    }
+                })
+                .catch( err => {
+                    console.log('error: ' , err);
+                    res.redirect('/');
+                });
             }
             else{
-                req.flash('errorLogin','Invalid email or password.');
+                req.flash('errorLogin','Invalid email or password (No registered).');
                 return res.redirect('/login');
             }
          })
-         .catch(err => console.log('error: ' , err) );
+        .catch(err => console.log('error: ' , err) );
+    }
+    
 };
 
 exports.getSignUp = (req,res,next) => {
 
     let errorMessage =  req.flash('errorSignUp');
-    errorMessage = errorMessage.length > 0 ? errorMessage[0] : null; 
+    errorMessage = errorMessage.length > 0 ? { errorSignUp: errorMessage[0] } : {}; 
 
     res.render('auth/signup.ejs', {
         docTitle: 'Sign up',
         path: req._parsedOriginalUrl.pathname,
-        errorMessage
+        errorMessage,
+        oldInput: false
     })
 };
 
 exports.postSignUp = async (req,res,next) => {
     const {email,password,confirmPassword,name} = req.body;
     let userCreated;
-
-    await User.findOne({email})
+    
+    const validationErrors = validate(req);
+    console.log('errors(Validation): ', validationErrors);
+    
+    if(Object.keys(validationErrors).length  > 0){
+        return res.status(422).render('auth/signup.ejs', {
+            docTitle: 'Sign up',
+            path: req._parsedUrl.pathname,
+            errorMessage: validationErrors,
+            oldInput:true,
+            userData: {email,password,confirmPassword,name}                                     //Edit values in the view
+        })
+    }
+    else{
+        await User.findOne({email})
             .then(user => {
                 if(user){
                     req.flash('errorSignUp','Email is taken already.');
@@ -179,7 +210,7 @@ exports.postSignUp = async (req,res,next) => {
                 else return res.redirect('/signup');
             })
             .catch(error => console.log('error: ' , error));
-
+    }
 };
 
 exports.postLogout = (req,res,next) => {
@@ -202,51 +233,54 @@ exports.getConfirmation = (req,res,next) => {
 
 exports.getReset = (req,res,next) => {
     let errorMessage = req.flash('errorEmailReset');
-    errorMessage = errorMessage.length > 0 ? errorMessage[0] : null; 
+    errorMessage = errorMessage.length > 0 ? {errorEmailReset: errorMessage[0]} : {}; 
 
     res.render('auth/reset-password',{
         docTitle : 'Reset Password',
         path: req._parsedOriginalUrl,
-        errorMessage:  errorMessage
+        errorMessage
     })
 }
 
 exports.postReset = async(req,res,next) => {
-    const email = req.body.email;  
-    await User.findOne({email})
-        .then(user => {
-            if(!user){
-                req.flash('errorEmailReset','Email is not signed up');
-            }
-            else{
-                jwt.sign( 
-                    {user: _.pick(user,'_id'), creationDate : new Date()},
-                    process.env.SECRET_RESET_PASSWORD,
-                    {expiresIn: '1h'},
-                        (err,emailToken) => {
-                            const url = `http://localhost:3000/reset-password/${emailToken}`;
-                            console.log('error(emailToken): ', err);
-                
-                            transporter.sendMail({
-                                to: email,
-                                from: process.env.EMAIL_USER,
-                                subject:'Reset Password',
-                                html: `<div style="overflow:auto; padding:15px;"> Please click this link to confirm you want to reset your password <mark>(This link has 1 hour to be used)</mark>: <a target="_blank" href="${url}">${url}</a> </div>`,
-                            });
-                        } 
-                );
-            }
-        })
-        .catch(err => console.log(err));
+    const {email} = req.body;  
+
+    const validationErrors = validate(req);
     
+    if(Object.keys(validationErrors).length  > 0) req.flash('errorEmailReset', validationErrors.email);
+    else{
+        await User.findOne({email})
+            .then(user => {
+                if(!user) req.flash('errorEmailReset','Email is not signed up');
+                else{
+                    jwt.sign( 
+                        {user: _.pick(user,'_id'), creationDate : new Date()},
+                        process.env.SECRET_RESET_PASSWORD,
+                        {expiresIn: '1h'},
+                            (err,emailToken) => {
+                                const url = `http://localhost:3000/reset-password/${emailToken}`;
+                                console.log('error(emailToken): ', err);
+                    
+                                transporter.sendMail({
+                                    to: email,
+                                    from: process.env.EMAIL_USER,
+                                    subject:'Reset Password',
+                                    html: `<div style="overflow:auto; padding:15px;"> Please click this link to confirm you want to reset your password <mark>(You have 1 hour to update your password)</mark>: <a target="_blank" href="${url}">${url}</a> </div>`,
+                                });
+                            } 
+                    );
+                }
+            })
+            .catch(err => console.log(err));
+        }
     return res.redirect('/reset-password');
 }
 
 exports.getResetToken = async (req,res,next) => {
     const resetToken = req.params.resetToken;
-
+    
     try {
-        let { user: { _id }, creationDate } = jwt.verify(resetToken, process.env.SECRET_RESET_PASSWORD);
+        let { creationDate } = jwt.verify(resetToken, process.env.SECRET_RESET_PASSWORD);
         
         await BlockListToken.findOne({ type:'password_reset', tokenValue:resetToken })
             .then(async (blockListRecord) => {
@@ -258,10 +292,11 @@ exports.getResetToken = async (req,res,next) => {
 
                     await BlockListToken.insertMany([{type:'password_reset', tokenValue:resetToken, expire_at:expireDate}]);
                     res.render('auth/new-password',{
-                        docTitle: 'Update Password',
+                        docTitle: 'New Password',
                         path: req._parsedOriginalUrl,
-                        userId: _id ?? 'UserNotFound',
-                        errorMessage
+                        userToken: resetToken,
+                        oldInput: false,
+                        errorMessage : {}
                     })
                 }
         })
@@ -275,26 +310,45 @@ exports.getResetToken = async (req,res,next) => {
 }
 
 exports.postNewPassword = async(req,res,next) => {
-    let {userId, password, confirmPassword} = req.body;
-    let updatedUser;
+    let {userToken, password, confirmPassword} = req.body;
+    
+    const validationErrors = validate(req);
+    
+    if(Object.keys(validationErrors).length > 0){
+        return res.status(422).render('auth/new-password',{
+                docTitle: 'New Password',
+                path: req._parsedOriginalUrl,
+                userToken,
+                oldInput: true,
+                userData: {password,confirmPassword},
+                errorMessage: validationErrors
+            })
+    }
+    else{
+        try {
+            let updatedUser;
+            let { user: { _id } } = jwt.verify(userToken, process.env.SECRET_RESET_PASSWORD);
+            
+            await User.findOne({_id})
+                    .then(user => {
+                        if(user){
+                            updatedUser = user;
+                            return bcrypt.hash(password,12);
+                        } 
+                        else return null;
+                    })
+                    .then(async (hashedPassword) => {
+                        if(hashedPassword){
+                            updatedUser.password = hashedPassword;
+                            await updatedUser.save();
+                        }
+                        res.redirect('/login');
+                    })
+                    .catch(err => console.log(err));
 
-    if(!objectIdValid(userId)) userId = 'UserNotFound';
-
-        await User.findOne({_id:userId})
-        .then(user => {
-            if(user){
-                updatedUser = user;
-                return bcrypt.hash(password,12);
-            } 
-            else return null;
-        })
-        .then(async (hashedPassword) => {
-            if(hashedPassword){
-                updatedUser.password = hashedPassword;
-                await updatedUser.save();
-            }
-            res.redirect('/login');
-        })
-        .catch(err => console.log(err));
-
+        } catch (err) {
+            console.log(err);
+            return res.status(403).send('Token to update password is already expired or it was not found');
+        }
+    }
 }

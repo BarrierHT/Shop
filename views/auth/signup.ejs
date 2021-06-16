@@ -15,37 +15,53 @@
             <h3>Sign up</h3>
         </div>
 
-        <% if(errorMessage) { %> 
+        <% if(errorMessage.hasOwnProperty('errorSignUp')){ %> 
             <div class="user-message user-message--error">
-                Error: <%= errorMessage %> 
+                Error: <%= errorMessage.errorSignUp %>
             </div>
-        <% } %> 
+        <% } %>  
         
         <div class="form-control">
             <label for="email">Email</label> 
-            <input type="email" name="email"  placeholder="Write the email" id="email">
+            <% if(errorMessage.hasOwnProperty('email')){ %> 
+                <div class="user-message user-message--error">
+                    Error: <%= errorMessage.email %>
+                </div>
+            <% } %>  
+            <input type="email" name="email"  placeholder="Write the email" id="email" value="<%= oldInput? userData.email: ''%>">
         </div>
 
         <div class="form-control">
             <label for="name">Name</label> 
-            <input type="name" name="name" placeholder="Write your name" id="name">
+            <% if(errorMessage.hasOwnProperty('name')){ %> 
+                <div class="user-message user-message--error">
+                    Error: <%= errorMessage.name %>
+                </div>
+            <% } %>  
+            <input type="name" name="name" placeholder="Write your name" id="name" value="<%= oldInput? userData.name: ''%>">
         </div>
 
         <div class="form-control">
             <label for="password">Password</label> 
-            <input type="password" name="password"  placeholder="Write the password" id="password">
+            <% if(errorMessage.hasOwnProperty('password')){ %> 
+                <div class="user-message user-message--error" style="white-space:pre-line;"> Error: <%= errorMessage.password %> </div>
+            <% } %>  
+            <input type="password" name="password"  placeholder="Write the password" id="password" value="<%= oldInput? userData.password: ''%>">
         </div>
 
         <div class="form-control">
-            <label for="confirmPassword">Confirm Passowrd</label> 
-            <input type="password" name="confirmPassword"  placeholder="Write the password again" id="confirmPassword">
+            <label for="confirmPassword">Confirm Password</label> 
+            <% if(errorMessage.hasOwnProperty('confirmPassword')){ %> 
+                <div class="user-message user-message--error">
+                    Error: <%= errorMessage.confirmPassword %>
+                </div>
+            <% } %>  
+            <input type="password" name="confirmPassword"  placeholder="Write the password again" id="confirmPassword" value="<%= oldInput? userData.confirmPassword: ''%>">
         </div>
         
         <input type="hidden" name="_csrf" value="<%= csrfToken %>">
         <button class="btn" type="submit">Sign up</button>
     </form> 
-
-
 
 </main>
 

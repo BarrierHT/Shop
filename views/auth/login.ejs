@@ -15,19 +15,32 @@
             <h3>Log in</h3>
         </div>
         
-        <% if(errorMessage) { %> 
+        <% if(errorMessage.hasOwnProperty('errorLogin')){ %> 
             <div class="user-message user-message--error">
-                Error: <%= errorMessage %> 
+                Error: <%= errorMessage.errorLogin %>
             </div>
-        <% } %> 
+        <% } %>  
 
         <div class="form-control">
-            <label for="email">Email</label> 
-            <input type="email" name="email"  placeholder="Write the email" id="email">
+            <label for="email">Email</label>
+
+            <% if(errorMessage.hasOwnProperty('email')){ %> 
+                <div class="user-message user-message--error">
+                    Error: <%= errorMessage.email %>
+                </div>
+            <% } %>   
+            
+            <input type="email" name="email"  placeholder="Write the email" id="email" value="<%= oldInput? userData.email : ''  %>">
         </div>
         <div class="form-control">
             <label for="password">Password</label> 
-            <input type="password" name="password"  placeholder="Write the password" id="password">
+            <% if(errorMessage.hasOwnProperty('password')){ %> 
+                <div class="user-message user-message--error">
+                    Error: <%= errorMessage.password %>
+                </div>
+            <% } %>   
+
+            <input type="password" name="password"  placeholder="Write the password" id="password" value="<%= oldInput? userData.password : ''  %>">
         </div>
         
         <input type="hidden" name="_csrf" value="<%= csrfToken %>">

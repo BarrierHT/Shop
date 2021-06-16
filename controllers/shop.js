@@ -1,3 +1,5 @@
+const { validate } = require('../middlewares/validator');
+
 const Product = require('../models/product');
 const Order = require('../models/orders');
 
@@ -30,42 +32,51 @@ exports.getIndex = (req,res) => {
 
 exports.getProducts = (req,res,next) => {      
     Product.find(/*{title: /a/,price:{$lte:129}} */ )									//* Model ---> Views		
-	.then(products => {
-        // console.log(products);
-        res.render('./shop/product-list.ejs',{
-            prods: products || [],
-            docTitle: 'All products',
-            path: req._parsedOriginalUrl.pathname
-        }); 
-	})
-	.catch(err => console.log(err));
+        .then(products => {
+            // console.log(products);
+            res.render('./shop/product-list.ejs',{
+                prods: products || [],
+                docTitle: 'All products',
+                path: req._parsedOriginalUrl.pathname
+            }); 
+        })
+	    .catch(err => console.log(err));
 }
 
 exports.getProduct = (req,res,next) => {
-    const productId = req.params.productId;
-    Product.findById(productId)
-    .then( product  => {
-            res.render('./shop/product-detail.ejs',{
-                docTitle: `Product: ${product.title}`,
-                product: product, 
-                path:'/products'
+    const {productId} = req.params
+
+    const validationErrors = validate(req);
+
+    if(Object.keys(validationErrors).length > 0) return res.redirect('/');
+    else{
+        Product.findById(productId)
+            .then( product  => {
+                if(!product) return res.status(403).send('Product not found');
+                res.render('./shop/product-detail.ejs',{
+                    docTitle: `Product: ${product.title}`,
+                    product: product, 
+                    path:'/products'
+                });
+            })
+            .catch(err => {
+                console.log('error: ', err);
             });
-    })
-    .catch(err => {
-        console.log('error: ', err);
-    });
+    }
 }
 
 exports.postCart = (req,res) => {
-    const prodId = req.body.productId;
-
-    req.user
-        .addToCart(prodId)
-        .then(result => {
-            // console.log('result: ',result);
-            res.redirect(301,'/cart');
-        })
-        .catch(err => console.log(err));
+    const {productId} = req.body;
+    if(req.user._id == req.session.user._id){  
+        req.user
+            .addToCart(productId)
+            .then(result => {
+                // console.log('result: ',result);
+                res.redirect(301,'/cart');
+            })
+            .catch(err => console.log(err));
+    }
+    else res.redirect('/');
 }
 
 exports.getCart = (req,res) => {
@@ -98,47 +109,61 @@ exports.getCart = (req,res) => {
 }
 
 exports.postDeleteCart = (req,res) => {
-    const prodId = req.body.cartProductId;
+    const {cartProductId} = req.body;
+    if(req.user._id == req.session.user._id){  
+        try {
+            return req.user
+                .deleteCartItem(cartProductId)
+                .then(result => {
+                    // console.log(result);
+                    return res.redirect(301,'/cart');
+                })
+                .catch(err =>{
+                    console.log(err);
+                    return res.redirect('/');
+                });
 
-    return req.user
-        .deleteCartItem(prodId)
-        .then(result => {
-            // console.log(result);
-            return res.redirect(301,'/cart');
-        })
-        .catch(err => console.log(err));
+        } catch (err) {
+            console.log(err);
+            return res.redirect('/');
+        }
+    } 
+    else res.redirect('/');
 }
 
 exports.postOrder = (req,res) => {
-
-    req.user
-        .addOrder()
-        .then(result => {
-            // console.log(result);
-            res.redirect(301,'/orders');
-        })
-        .catch(err => console.log(err));
+    if(req.user._id == req.session.user._id){  
+        req.user
+            .addOrder()
+            .then(result => {
+                // console.log(result);
+                res.redirect(301,'/orders');
+            })
+            .catch(err => console.log(err));
+    } 
+    else res.redirect('/');
 }
 
 exports.getOrders = (req,res) => {
-        Order.find({'user._id': req.user._id})
-        .then(orders => {
-
-            // console.log('orders: ',orders);
-            
-            orders.forEach(order => {
-                let totalPrice = 0;
-                order.items.forEach( product => totalPrice+= (product.quantity*product.price) )
-                order.totalPrice = totalPrice;
-            });
-            
-            res.render('./shop/orders.ejs',{
-                docTitle: 'Orders', 
-                path:req._parsedOriginalUrl.pathname,
-                orders: orders
-            }); 
-        })
-        .catch(err => console.log(err));
+    if(req.user._id == req.session.user._id){  
+        Order.find({'user._id': req.session.user._id})
+            .then(orders => {
+    
+                orders.forEach(order => {
+                    let totalPrice = 0;
+                    order.items.forEach( product => totalPrice+= (product.quantity*product.price) )
+                    order.totalPrice = totalPrice;
+                });
+                
+                res.render('./shop/orders.ejs',{
+                    docTitle: 'Orders', 
+                    path:req._parsedOriginalUrl.pathname,
+                    orders
+                }); 
+            })
+            .catch(err => console.log(err));
+    } 
+    else res.redirect('/');
 }
 
 
